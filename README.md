@@ -1,67 +1,76 @@
 # SIAPEL POLINELA (Sistem Informasi Absensi Apel Berbasis RFID)
 
-Sistem Informasi Absensi Apel Terintegrasi Berbasis RFID untuk Politeknik Negeri Lampung (POLINELA).  
-Aplikasi ini dirancang untuk mencatat dan memvalidasi kehadiran apel secara real-time, cepat, dan akurat menggunakan pemindaian kartu RFID/NFC, meminimalisir antrean, mencegah kecurangan (*titip kartu* / absensi ganda), serta menyediakan rekapitulasi data kehadiran otomatis.
+Sistem Informasi Absensi Apel Kedisiplinan Terintegrasi Berbasis RFID untuk **Politeknik Negeri Lampung (POLINELA)**.  
+Aplikasi ini dirancang untuk mencatat dan memvalidasi kehadiran apel mahasiswa secara real-time, cepat, dan presisi menggunakan kartu RFID/NFC, meminimalisir antrean, mencegah titip kartu/absensi ganda, menyediakan verifikasi izin/sakit digital, serta terintegrasi langsung dengan sistem akademik E-Kuliah POLINELA.
 
 ---
 
-## 1. Fitur Utama
+## 1. Fitur Utama Sistem
 
-- **Otorisasi Multi-Peran (RBAC):**
-  - **Admin:** Pengelolaan peserta (NPM, Nama, Prodi, Kompi), pemetaan/penggantian kartu RFID, manajemen jadwal apel, pengelolaan akun petugas, pemantauan audit log, dan ekspor laporan (CSV/Excel & PDF).
-  - **Petugas Apel:** Menjalankan sesi absensi apel aktif melalui aplikasi Android maupun Web Scanner, memantau statistik kehadiran real-time, dan melakukan pencarian cepat peserta.
+- **Struktur Rute Terisolasi Berbasis Role (RBAC):**
+  - **Admin (`/admin/...`):**
+    - Kelola Data Mahasiswa (NPM, Nama, Program Studi, Kompi/Pleton, Status Aktif).
+    - Pemetaan kartu RFID dan aktivasi/deaktivasi kartu fisik mahasiswa.
+    - Kelola Akun Tim Kedisiplinan (Timdis).
+    - Manajemen Jadwal Apel: Generate jadwal rutin, jadwal khusus, penyesuaian toleransi keterlambatan, dan pembatalan apel.
+    - Integrasi Sistem E-Kuliah POLINELA: Sinkronisasi master data mahasiswa dan pengiriman rekapitulasi kehadiran ke portal akademik.
+    - Audit Trail & Log Aktivitas Sistem secara komprehensif.
+  - **Tim Kedisiplinan / Timdis (`/timdis/...`):**
+    - Dashboard Pemantauan Apel: Statistik kehadiran, rasio ketepatan waktu, dan grafik tren kehadiran adaptif.
+    - Live Monitoring Scan Presensi: Pemantauan tap kartu real-time dengan Web Audio API feedback (suara konfirmasi).
+    - Verifikasi & Validasi Permohonan Izin / Sakit: Peninjauan bukti surat dokter/alasan izin dan aksi persetujuan (*approval*) atau penolakan dengan catatan.
+    - Riwayat Presensi & Ekspor Laporan: Unduh data kehadiran format Microsoft Excel / CSV berstandar UTF-8 BOM dan cetak dokumen PDF resmi.
 - **Validasi Absensi Sisi Server (Server-Side Enforcement):**
-  - Jam validasi sepenuhnya menggunakan waktu server (`now()`), mencegah manipulasi waktu dari sisi klien/perangkat.
-  - Penentuan status otomatis: **Hadir** (sebelum/tepat batas toleransi) atau **Terlambat** (melewati batas toleransi keterlambatan).
-  - Pengecekan jendela waktu absensi (`attendance_start` sampai `attendance_end`).
-  - Pencegahan pemindaian duplikat secara idempoten dengan *database lock* & *unique constraint*.
-  - Dukungan mode **Check-In** (Absensi Masuk) dan **Check-Out** (Absensi Selesai Apel).
-- **Integrasi Hardware RFID Fleksibel:**
-  - **Web Scanner:** Mendukung USB RFID Reader (USB HID Keyboard Emulation mode) yang langsung membaca UID kartu tanpa instalasi driver khusus, dilengkapi audio feedback Web Audio API (beep sukses/gagal).
-  - **Aplikasi Android:** Mendukung pemindaian via chip NFC bawaan smartphone (ISO 14443-A / Mifare) serta USB RFID Reader OTG.
-- **Audit Trail & Keamanan:**
-  - Pencatatan seluruh *event* tap kartu pada tabel `attendance_events` (termasuk tap ditolak, kartu tidak dikenal, atau di luar jadwal).
-  - Pencatatan aktivitas administratif pengguna pada tabel `audit_logs`.
-  - Autentikasi API berbasis token aman Laravel Sanctum.
-  - Sanitasi input dan proteksi CSRF, XSS, SQL Injection, dan IDOR.
+  - Menggunakan waktu server tepercaya (`now()`), mencegah kecurangan manipulasi jam perangkat klien.
+  - Penentuan status otomatis: **Hadir Tepat Waktu** (sebelum/tepat batas toleransi) atau **Terlambat** (melewati menit toleransi keterlambatan dengan perhitungan menit keterlambatan otomatis).
+  - Validasi jendela waktu sesi absensi (`attendance_start` sampai `attendance_end`).
+  - Pencegahan pemindaian duplikat secara idempoten melalui *database transaction lock* (`lockForUpdate`).
+  - Mendukung alur **Check-In** (Absensi Masuk) dan **Check-Out** (Absensi Keluar).
+- **Integrasi Hardware RFID & Multi-Klien:**
+  - **Web Live Scanner:** Mendukung USB RFID Reader (USB HID Keyboard Emulation mode) tanpa driver tambahan.
+  - **Klien Mobile / IoT:** REST API siap dihubungkan dengan aplikasi Android (NFC internal / USB OTG) maupun microcontroller mandiri (ESP32 / RC522).
+- **Kepatuhan Class Diagram & Standar NPM POLINELA:**
+  - Entitas database dan model telah sepenuhnya diselaraskan dengan spesifikasi Class Diagram resmi (`Pengguna`, `Mahasiswa`, `Apel`, `Presensi`, `PengajuanIzin`, `LogSinkronisasi`, dan antarmuka eksternal `SistemEKuliah`).
+  - Menggunakan identitas **NPM** (Nomor Pokok Mahasiswa) di seluruh basis data, antarmuka, validasi, dan laporan rekapitulasi.
 
 ---
 
 ## 2. Tech Stack & Arsitektur
 
-| Komponen | Teknologi | Keterangan |
+| Layer | Teknologi | Keterangan |
 | :--- | :--- | :--- |
-| **Backend** | PHP 8.4+, Laravel 13.x | MVC, Eloquent ORM, Laravel Sanctum v4 |
-| **Database** | MySQL 8.0+ | Database `siapel_db` |
-| **Web Frontend** | Blade Templates, Vite 7.x, Tailwind CSS v4 | Antarmuka responsif mengacu pada [StyleGuide.md](file:///d:/Project%20Web%20dan%20Tugas/SiApel/StyleGuide.md) |
-| **Testing** | PHPUnit 12.x | 28 automated feature & unit tests |
-| **Code Style** | Laravel Pint | Standar PSR-12 |
+| **Backend** | PHP 8.4+, Laravel 13.x | MVC Architecture, Eloquent ORM, Laravel Sanctum v4 |
+| **Database** | MySQL 8.0+ | Database `siapel_db` dengan tabel fisik Class Diagram |
+| **Frontend** | Blade Templates, Vite 7.x, Tailwind CSS v4 | Berdasarkan spesifikasi desain [StyleGuide.md](file:///d:/Project%20Web%20dan%20Tugas/SiApel/StyleGuide.md) |
+| **Icons & UI** | Lucide Icons, Google Fonts (DM Sans & IBM Plex Mono) | Tipografi formal & angka statistik kehadiran kontras tinggi |
+| **Testing** | PHPUnit 12.x | **54 automated unit & feature tests (100% Passed)** |
+| **Code Style** | Laravel Pint | Standar kode PSR-12 / Laravel Preset |
 
 ---
 
 ## 3. Akun Pengguna Bawaan (Default Credentials)
 
-Setelah menjalankan seeder database, sistem menyediakan akun default berikut:
+Setelah menjalankan seeder database, sistem menyediakan akun default berikut untuk pengujian lokal:
 
-| Peran | Username | Password | Keterangan |
+| Peran | Username | Password Default | Hak Akses Utama |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin` | `password123` | Akses penuh dashboard administrasi, CRUD peserta, jadwal, dan laporan |
-| **Petugas** | `petugas1` | `password123` | Akses operasional pemantauan absensi web & login aplikasi Android |
-| **Petugas** | `petugas2` | `password123` | Akses operasional lapangan kedua |
+| **Admin** | `admin` | `password123` | Akses rute `/admin/*` (Kelola Mahasiswa, Timdis, Jadwal Apel, E-Kuliah, Audit Trail) |
+| **Timdis** | `timdis` / `petugas1` | `password123` | Akses rute `/timdis/*` (Monitoring Scan, Verifikasi Izin/Sakit, Laporan & Ekspor) |
+| **Timdis 2** | `petugas2` | `password123` | Petugas operasional pemantauan lapangan kedua |
 
-> Catatan: Pengguna juga dapat login menggunakan alamat email (misal: `admin@polinela.ac.id`).
+> **Tips:** Pengguna juga dapat masuk menggunakan alamat email resmi (contoh: `admin@polinela.ac.id` atau `timdis@polinela.ac.id`).
 
 ---
 
-## 4. Panduan Instalasi & Menjalankan Web Dashboard
+## 4. Panduan Instalasi & Menjalankan Sistem
 
-### Persyaratan Sistem
+### Persyaratan Lingkungan
 - PHP >= 8.2 (dengan ekstensi `pdo_mysql`, `mbstring`, `openssl`, `bcmath`, `curl`)
 - MySQL Server >= 8.0
 - Composer >= 2.x
 - Node.js >= 18.x & NPM
 
-### Langkah-langkah Setup
+### Langkah Setup
 1. **Clone repositori dan install dependensi backend:**
    ```bash
    composer install
@@ -72,9 +81,12 @@ Setelah menjalankan seeder database, sistem menyediakan akun default berikut:
    npm install
    ```
 
-3. **Konfigurasi Lingkungan (`.env`):**
-   Salin file `.env.example` ke `.env` lalu sesuaikan konfigurasi database Anda:
+3. **Konfigurasi Environment File (`.env`):**
+   Salin file `.env.example` ke `.env` lalu sesuaikan koneksi database Anda:
    ```env
+   APP_NAME="SIAPEL POLINELA"
+   APP_URL=http://127.0.0.1:8000
+
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
    DB_PORT=3306
@@ -100,50 +112,47 @@ Setelah menjalankan seeder database, sistem menyediakan akun default berikut:
    npm run dev
    ```
 
-7. **Jalankan Local Development Server:**
+7. **Jalankan Server Lokal:**
    ```bash
    php artisan serve
    ```
-   Buka browser di: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+   Buka peramban di: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 ---
 
 ## 5. Menjalankan Pengujian Otomatis (Automated Testing)
 
-Sistem telah dilengkapi dengan test suite lengkap yang mencakup unit test logika absensi, pengujian endpoint REST API, serta feature test web dashboard:
+Sistem telah dilengkapi dengan test suite lengkap (54 test cases, 252 assertions) tanpa kegagalan:
 
 ```bash
 # Menjalankan seluruh test suite PHPUnit:
 php vendor/phpunit/phpunit/phpunit
-# Atau via artisan:
+# Atau melalui artisan:
 php artisan test
 ```
 
-Semua 28 test mencakup pengujian:
-- Autentikasi & kontrol peran (Admin vs Petugas)
-- Pencegahan akses akun nonaktif
-- Validasi waktu keterlambatan (*on time* vs *late*)
-- Idempotensi & pencegahan scan duplikat
-- Penanganan kartu tidak terdaftar & peserta nonaktif
-- Validasi jendela waktu sesi absensi
-- Alur check-in dan check-out
-- Ekspor CSV dan cetak PDF
+### Ruang Lingkup Pengujian:
+- **Class Diagram Alignment:** Validasi seluruh operasi dan relasi class `Pengguna`, `Mahasiswa`, `Apel`, `Presensi`, `PengajuanIzin`, `LogSinkronisasi`, serta integrasi `SistemEKuliah`.
+- **Role Isolation & Navigation:** Penegasan proteksi middleware antar rute `/admin` dan `/timdis` serta larangan akses lintas role.
+- **Attendance Core Logic:** Perhitungan menit keterlambatan, penanganan jendela waktu absensi, idempotensi duplikasi scan, dan status alpa.
+- **REST API:** Login Sanctum token, pembacaan jadwal aktif, dan pemrosesan pemindaian RFID.
+- **Fitur Persetujuan Izin/Sakit:** Verifikasi alur persetujuan (*approval*) dan penolakan izin dengan pencatatan audit log.
 
-Untuk memeriksa dan memperbaiki format kode:
+Untuk merapikan format kode sesuai standar PSR-12:
 ```bash
 vendor/bin/pint
 ```
 
 ---
 
-## 6. Dokumentasi REST API
+## 6. Dokumentasi REST API (v1)
 
-Semua endpoint API beralamat di `/api/v1/` dan mengembalikan respons berformat JSON.
+Seluruh endpoint API beralamat di `/api/v1/` dan mengembalikan respons terstandarisasi dalam format JSON.
 
-### A. Autentikasi
+### A. Autentikasi API
 
 #### `POST /api/v1/auth/login`
-- **Tujuan:** Autentikasi petugas apel / admin dan mendapatkan Bearer token Sanctum.
+- **Tujuan:** Autentikasi petugas / admin untuk mendapatkan Bearer token Sanctum.
 - **Request Body:**
   ```json
   {
@@ -156,11 +165,11 @@ Semua endpoint API beralamat di `/api/v1/` dan mengembalikan respons berformat J
   ```json
   {
     "success": true,
-    "message": "Autentikasi berhasil.",
+    "message": "Login berhasil.",
     "token": "1|qX8y...example_token",
     "user": {
       "id": 2,
-      "name": "Petugas Apel 1",
+      "name": "Petugas Kedisiplinan 1",
       "username": "petugas1",
       "email": "petugas1@polinela.ac.id",
       "role": "petugas"
@@ -169,57 +178,23 @@ Semua endpoint API beralamat di `/api/v1/` dan mengembalikan respons berformat J
   ```
 
 #### `GET /api/v1/auth/me` *(Auth: Bearer Token)*
-- Mengembalikan informasi profil pengguna yang sedang login.
+- Mengembalikan profil akun pengguna yang sedang terautentikasi.
 
 #### `POST /api/v1/auth/logout` *(Auth: Bearer Token)*
-- Mencabut token otorisasi aktif.
+- Mencabut dan menghapus Bearer token aktif.
 
 ---
 
 ### B. Jadwal Apel & Pemindaian Absensi
 
 #### `GET /api/v1/schedules/active` *(Auth: Bearer Token)*
-- **Tujuan:** Mengambil daftar sesi apel yang sedang aktif atau dijadwalkan hari ini.
-- **Response Sukses (200 OK):**
-  ```json
-  {
-    "success": true,
-    "schedules": [
-      {
-        "id": 1,
-        "title": "Apel Pagi Kedisiplinan Mahasiswa",
-        "schedule_date": "2026-10-22",
-        "start_time": "07:00:00",
-        "end_time": "08:00:00",
-        "attendance_start": "06:30:00",
-        "attendance_end": "07:45:00",
-        "late_threshold_time": "07:15:00",
-        "location": "Lapangan Utama Kampus POLINELA",
-        "status": "active"
-      }
-    ]
-  }
-  ```
+- **Tujuan:** Mengambil daftar sesi apel yang berstatus aktif atau dijadwalkan pada hari ini.
 
 #### `GET /api/v1/schedules/{id}/summary` *(Auth: Bearer Token)*
-- **Tujuan:** Mengambil rekap statistik kehadiran per sesi apel secara real-time.
-- **Response Sukses (200 OK):**
-  ```json
-  {
-    "success": true,
-    "schedule": { "id": 1, "title": "Apel Pagi Kedisiplinan Mahasiswa" },
-    "statistics": {
-      "total_participants": 9,
-      "total_recorded": 5,
-      "total_hadir": 4,
-      "total_terlambat": 1,
-      "attendance_percentage": 55.6
-    }
-  }
-  ```
+- **Tujuan:** Mengambil ringkasan data statistik kehadiran per sesi apel secara langsung.
 
 #### `POST /api/v1/attendance/scan` *(Auth: Bearer Token)*
-- **Tujuan:** Memvalidasi dan mencatat tap kartu RFID secara real-time.
+- **Tujuan:** Memvalidasi kartu RFID dan mencatat presensi mahasiswa.
 - **Request Body:**
   ```json
   {
@@ -234,119 +209,103 @@ Semua endpoint API beralamat di `/api/v1/` dan mengembalikan respons berformat J
   {
     "success": true,
     "code": "CHECK_IN_SUCCESS",
-    "message": "Absensi Ahmad Rizki Pratama berhasil dicatat (hadir).",
+    "message": "Absensi berhasil: Hadir Tepat Waktu (Ahmad Fauzi)",
     "attendance": {
-      "id": 12,
       "status": "hadir",
-      "check_in_time": "2026-10-22 07:08:15",
-      "check_out_time": null
+      "menit_terlambat": 0,
+      "metode": "RFID",
+      "check_in_time": "06:55:12",
+      "late_threshold": "07:15:00"
     },
     "participant": {
-      "id": 1,
       "identifier": "22753001",
-      "name": "Ahmad Rizki Pratama",
-      "study_program": "D3 Manajemen Informatika",
-      "class_group": "Kompi A / Pleton 1"
+      "name": "Ahmad Fauzi",
+      "study_program": "Manajemen Informatika",
+      "class_group": "Kompi A - Pleton 1"
     }
-  }
-  ```
-- **Response Error (409 Conflict - Duplikat):**
-  ```json
-  {
-    "success": false,
-    "code": "DUPLICATE_SCAN",
-    "message": "Peserta ini sudah melakukan absensi masuk sebelumnya pada pukul 07:08:15."
-  }
-  ```
-- **Response Error (404 Not Found - Kartu Tidak Dikenal):**
-  ```json
-  {
-    "success": false,
-    "code": "CARD_NOT_REGISTERED",
-    "message": "Kartu RFID (UID: E2999999) belum terdaftar dalam sistem."
   }
   ```
 
 #### `GET /api/v1/participants/lookup?identifier=22753001` *(Auth: Bearer Token)*
-- Mencari data peserta berdasarkan NPM/NIP atau Card UID.
+- Mencari data mahasiswa berdasarkan NPM atau Card UID.
 
 ---
 
 ## 7. Petunjuk Penggunaan Hardware RFID
 
-### A. Penggunaan Web Live Scanner (Laptop / PC Petugas)
-1. Login sebagai Admin atau Petugas di Web Dashboard.
-2. Akses menu **Monitor Absensi** (`/attendance/monitor`).
-3. Pilih sesi apel aktif hari ini.
-4. Hubungkan **USB RFID Reader (13.56 MHz / 125 kHz)** ke port USB laptop/PC.
-   - Reader beroperasi sebagai *USB HID Keyboard Emulation*.
-   - Saat kartu ditap, reader secara otomatis mengetikkan string UID kartu dan mengirimkan karakter *Enter* (`\n`).
-5. Arahkan kursor ke input tap kartu (atau sistem akan otomatis memfokuskannya).
-6. Saat kartu ditempelkan:
-   - Web scanner akan mengirimkan request AJAX ke backend.
-   - Visual banner konfirmasi akan langsung muncul (Hijau: Hadir, Kuning: Terlambat, Merah: Ditolak/Duplikat).
-   - Audio beep berbunyi untuk memberikan feedback langsung tanpa petugas harus terus menatap layar.
-
-### B. Integrasi Controller IoT & Scanner Eksternal
-Perangkat controller mandiri (seperti ESP32 / Arduino RC522) atau pemindai mobile dapat mengirimkan data presensi langsung ke endpoint REST API:
-- **Endpoint:** `POST /api/v1/attendance/scan`
-- **Header:** `Authorization: Bearer <TOKEN>` & `Content-Type: application/json`
-- **Payload:** `{"apel_schedule_id": 1, "card_uid": "<UID_KARTU>", "scan_type": "check_in"}`
+### A. Penggunaan Web Live Scanner (Laptop / PC Timdis)
+1. Masuk ke Web Dashboard sebagai Admin atau Timdis.
+2. Akses menu **Live Monitoring Apel** (`/admin/monitoring` atau `/timdis/monitoring`).
+3. Pilih jadwal apel aktif hari ini.
+4. Pasang **USB RFID Reader (13.56 MHz / 125 kHz)** ke port USB laptop.
+   - Reader bekerja dengan mode *USB HID Keyboard Emulation*.
+   - Saat kartu didekatkan, reader secara otomatis membaca UID kartu dan mengirimkan sinyal *Enter* (`\n`).
+5. Arahkan kursor ke kotak tap kartu (sistem juga memfokuskan kursor secara otomatis).
+6. Saat kartu mahasiswa ditempelkan:
+   - Data absensi langsung diverifikasi ke server.
+   - Banner status kehadiran muncul instan (Hijau = Hadir, Kuning = Terlambat, Merah = Ditolak / Duplikat).
+   - Audio feedback berbunyi otomatis sehingga petugas tidak harus menatap layar terus-menerus.
 
 ---
 
-## 8. Desain UI & Token Visual
-
-Sistem antarmuka web dibangun mengikuti token visual resmi pada [StyleGuide.md](file:///d:/Project%20Web%20dan%20Tugas/SiApel/StyleGuide.md):
-- **Warna Utama:** `#2D56FF` (Primary), `#4D7BFF` (Accent), `#1B37B9` (Primary Dark).
-- **Warna Permukaan:** `#F4F6FC` (Background), `#FFFFFF` (Surface Card), `#D9D9D9` (Border).
-- **Status Kehadiran:** `#22C55E` (Hadir), `#F5A623` (Terlambat), `#FF0004` (Alpa / Ditolak).
-- **Tipografi:** *DM Sans* untuk seluruh Heading & Body, serta *IBM Plex Mono* untuk angka statistik kehadiran (`32px font-bold`).
-
----
-
-## 9. Struktur Direktori Proyek
+## 8. Struktur Direktori Proyek
 
 ```plaintext
 SiApel/
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   ├── Api/ (AuthController, AttendanceApiController)
-│   │   │   ├── AttendanceController.php
-│   │   │   ├── ApelScheduleController.php
-│   │   │   ├── AuditLogController.php
-│   │   │   ├── AuthController.php
-│   │   │   ├── DashboardController.php
-│   │   │   ├── OfficerController.php
-│   │   │   ├── ParticipantController.php
-│   │   │   └── ReportController.php
-│   │   └── Middleware/ (EnsureUserHasRole.php)
-│   ├── Models/ (User, Participant, RfidCard, ApelSchedule, AttendanceRecord, AttendanceEvent, AuditLog)
-│   └── Services/ (AttendanceService.php)
+│   │   │   ├── Api/ (AuthController.php, AttendanceApiController.php)
+│   │   │   ├── ApelScheduleController.php      # Manajemen jadwal apel & pembatalan
+│   │   │   ├── AttendanceController.php        # Monitoring scan presensi & riwayat
+│   │   │   ├── AuditLogController.php          # Audit trail aktivitas pengguna
+│   │   │   ├── AuthController.php              # Autentikasi web & login redirect
+│   │   │   ├── DashboardController.php         # Dashboard analitik & tren kehadiran
+│   │   │   ├── EKuliahController.php           # Konfigurasi & sinkronisasi E-Kuliah
+│   │   │   ├── OfficerController.php           # CRUD pengelolaan akun Timdis
+│   │   │   ├── ParticipantController.php       # CRUD data mahasiswa & pemetaan RFID
+│   │   │   ├── PermissionRequestController.php # Persetujuan izin & sakit
+│   │   │   ├── ProfileController.php           # Profil akun & ganti kata sandi
+│   │   │   └── ReportController.php            # Rekapitulasi & ekspor CSV/Excel/PDF
+│   │   └── Middleware/
+│   │       └── EnsureUserHasRole.php           # Proteksi isolasi role (admin vs timdis)
+│   ├── Models/
+│   │   ├── Concerns/MapsLegacyColumns.php      # Dynamic column translation trait
+│   │   ├── Apel.php / ApelSchedule.php         # Model jadwal apel
+│   │   ├── AttendanceEvent.php                 # Log audit scan RFID
+│   │   ├── AttendanceRecord.php / Presensi.php # Model data kehadiran presensi
+│   │   ├── AuditLog.php                        # Catatan audit aktivitas sistem
+│   │   ├── EkuliahSyncLog.php                  # Riwayat sinkronisasi data akademik
+│   │   ├── Mahasiswa.php / Participant.php     # Model data mahasiswa (NPM)
+│   │   ├── MappedEloquentBuilder.php           # Custom Eloquent query builder
+│   │   ├── PengajuanIzin.php                   # Model permohonan izin/sakit
+│   │   ├── Pengguna.php / User.php             # Model akun pengguna sistem
+│   │   ├── RfidCard.php                        # Model relasi kartu fisik RFID
+│   │   └── SystemSetting.php                   # Pengaturan konfigurasi sistem
+│   └── Services/
+│       ├── AttendanceService.php               # Logika inti pemindaian & validasi RFID
+│       └── EKuliahService.php                  # Service integrasi eksternal Sistem E-Kuliah
 ├── database/
-│   ├── migrations/ (8 file migrasi database MySQL)
-│   └── seeders/ (DatabaseSeeder, AdminSeeder, ParticipantSeeder, ApelScheduleSeeder)
+│   ├── migrations/                             # Skema tabel database (pengguna, mahasiswa, apel, presensi, pengajuan_izin, log_sinkronisasi)
+│   └── seeders/                                # Seeder akun bawaan & data mock
 ├── resources/
-│   ├── css/app.css (Tailwind CSS v4 token definition)
-│   ├── js/app.js
-│   └── views/
-│       ├── layouts/ (app.blade.php, guest.blade.php)
-│       └── pages/ (auth, dashboard, attendance, participants, schedules, reports, officers, audit-logs)
+│   ├── css/app.css                             # Tailwind CSS v4 design tokens
+│   ├── js/app.js                               # Web Audio API & RFID scanner script
+│   └── views/                                  # Blade templates responsif
+│       ├── layouts/                            # Layout utama & sidebar navigasi role
+│       └── pages/                              # Halaman dashboard, mahasiswa, apel, izin, laporan
 ├── routes/
-│   ├── api.php (Sanctum authenticated v1 endpoints)
-│   └── web.php (Blade dashboard web routes)
-├── tests/
-│   ├── Feature/ (AttendanceApiTest.php, WebDashboardTest.php)
-│   └── Unit/ (AttendanceServiceTest.php)
-├── IMPLEMENTATION_PLAN.md           # Analisis gap, perancangan arsitektur, & status implementasi
-├── PRD.md                          # Dokumen Spesifikasi Kebutuhan Produk
-├── StyleGuide.md                   # Panduan token visual resmi POLINELA
-└── README.md                       # Dokumentasi resmi ini
+│   ├── api.php                                 # REST API v1 endpoints
+│   └── web.php                                 # Rute terisolasi /admin dan /timdis
+├── tests/                                      # 54 Automated unit & feature test cases
+├── AGENTS.md                                   # Panduan operasional AI coding assistant
+├── PRD.md                                      # Dokumen Kebutuhan Produk
+├── StyleGuide.md                               # Panduan Token Desain Visual POLINELA
+└── README.md                                   # Dokumentasi resmi ini
 ```
 
 ---
 
-## 10. Lisensi
+## 9. Lisensi & Hak Cipta
 
-Hak Cipta © 2026 Politeknik Negeri Lampung (POLINELA). Seluruh hak cipta dilindungi undang-undang.
+Hak Cipta © 2026 **Politeknik Negeri Lampung (POLINELA)**. Seluruh hak cipta dilindungi undang-undang.
