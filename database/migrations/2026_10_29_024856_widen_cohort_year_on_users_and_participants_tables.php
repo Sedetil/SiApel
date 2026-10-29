@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        $userTable = Schema::hasTable('pengguna') ? 'pengguna' : 'users';
+        $participantTable = Schema::hasTable('mahasiswa') ? 'mahasiswa' : 'participants';
+
+        Schema::table($userTable, function (Blueprint $table) {
             $table->string('cohort_year', 100)->nullable()->change();
         });
 
-        Schema::table('participants', function (Blueprint $table) {
+        Schema::table($participantTable, function (Blueprint $table) {
             $table->string('cohort_year', 50)->nullable()->change();
         });
     }
@@ -25,11 +28,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        $userTable = Schema::hasTable('pengguna') ? 'pengguna' : 'users';
+        $participantTable = Schema::hasTable('mahasiswa') ? 'mahasiswa' : 'participants';
+
+        Schema::table($userTable, function (Blueprint $table) {
             $table->string('cohort_year', 10)->nullable()->change();
         });
 
-        Schema::table('participants', function (Blueprint $table) {
+        Schema::table($participantTable, function (Blueprint $table) {
             $table->string('cohort_year', 10)->nullable()->change();
         });
     }

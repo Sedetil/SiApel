@@ -13,7 +13,7 @@ class ApelScheduleAutomationService
      * Memastikan jadwal apel untuk hari Senin & Jumat otomatis tersedia.
      * Dapat dipanggil saat aplikasi diakses (Dashboard/Monitor/Schedule) atau via Task Scheduler.
      *
-     * @param int $weeksAhead Jumlah minggu ke depan yang di-generate (default 4 minggu)
+     * @param  int  $weeksAhead  Jumlah minggu ke depan yang di-generate (default 4 minggu)
      * @return Collection Daftar jadwal yang dibuat atau sudah ada
      */
     public static function ensureMondayAndFridaySchedules(int $weeksAhead = 4): Collection

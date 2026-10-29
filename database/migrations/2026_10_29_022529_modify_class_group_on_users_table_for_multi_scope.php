@@ -11,7 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        $targetTable = Schema::hasTable('pengguna') ? 'pengguna' : 'users';
+
+        Schema::table($targetTable, function (Blueprint $table) {
             // Perlebar kolom class_group menjadi text agar bisa menampung format JSON / array beberapa kelas
             $table->text('class_group')->nullable()->change();
         });
@@ -22,7 +24,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        $targetTable = Schema::hasTable('pengguna') ? 'pengguna' : 'users';
+
+        Schema::table($targetTable, function (Blueprint $table) {
             $table->string('class_group', 100)->nullable()->change();
         });
     }

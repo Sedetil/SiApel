@@ -114,7 +114,7 @@
                                         </button>
 
                                         <!-- Toggle Status -->
-                                        <form method="POST" action="{{ route('officers.toggle-status', $officer) }}" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin mengubah status aktif akun Timdis {{ $officer->name }}?')">
+                                        <form method="POST" action="{{ route('admin.officers.toggle-status', $officer) }}" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin mengubah status aktif akun Timdis {{ $officer->name }}?')">
                                             @csrf
                                             <button type="submit" class="p-1.5 rounded-md hover:bg-background {{ $officer->isActive() ? 'text-text-secondary hover:text-warning' : 'text-success' }} transition-colors" title="{{ $officer->isActive() ? 'Nonaktifkan Akun' : 'Aktifkan Akun' }}">
                                                 <i data-lucide="power" class="w-4 h-4"></i>
@@ -122,7 +122,7 @@
                                         </form>
 
                                         <!-- Delete Akun -->
-                                        <form method="POST" action="{{ route('officers.destroy', $officer) }}" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun Timdis {{ $officer->name }} secara permanen?')">
+                                        <form method="POST" action="{{ route('admin.officers.destroy', $officer) }}" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun Timdis {{ $officer->name }} secara permanen?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="p-1.5 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors" title="Hapus Akun Timdis">
@@ -155,7 +155,7 @@
             </button>
         </div>
 
-        <form method="POST" action="{{ route('officers.store') }}" class="space-y-4">
+        <form method="POST" action="{{ route('admin.officers.store') }}" class="space-y-4">
             @csrf
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -242,8 +242,8 @@ class WebMonitoringSecurityTest extends TestCase
         $resName = $this->actingAs($this->timdis)->get('/timdis/presensi/riwayat?search=Mahasiswa+Uji');
         $resName->assertStatus(200)->assertSee('Mahasiswa Uji Monitoring');
 
-        // Cari berdasarkan status
-        $resStatus = $this->actingAs($this->timdis)->get('/timdis/presensi/riwayat?status=hadir');
+        // Cari berdasarkan status (sertakan search agar record pengujian masuk dalam page)
+        $resStatus = $this->actingAs($this->timdis)->get('/timdis/presensi/riwayat?status=hadir&search=Mahasiswa+Uji');
         $resStatus->assertStatus(200)->assertSee('Mahasiswa Uji Monitoring');
 
         // Cari dengan kriteria yang tidak ada

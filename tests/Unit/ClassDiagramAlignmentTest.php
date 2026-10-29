@@ -226,6 +226,30 @@ class ClassDiagramAlignmentTest extends TestCase
         $this->assertEquals('id_sinkron', (new LogSinkronisasi)->getKeyName());
 
         // Verifikasi query pada tabel-tabel baru di database
+        Pengguna::firstOrCreate(
+            ['username' => 'test_cd_pengguna'],
+            ['nama' => 'Test Pengguna', 'email' => 'test_cd@example.com', 'kata_sandi' => bcrypt('password'), 'peran' => 'petugas']
+        );
+        Mahasiswa::firstOrCreate(
+            ['npm' => 'TEST_NPM_001'],
+            ['nama' => 'Test Mahasiswa', 'kelas' => 'TRPL 1A']
+        );
+        $apel = Apel::firstOrCreate(
+            ['tanggal' => Carbon::today()->toDateString(), 'jam_mulai' => '07:00:00', 'jam_selesai' => '08:00:00'],
+            [
+                'title' => 'Apel Pagi CD Test',
+                'jenis' => 'rutin',
+                'attendance_start' => '06:30:00',
+                'attendance_end' => '07:30:00',
+                'late_threshold_time' => '07:00:00',
+                'status' => 'scheduled',
+            ]
+        );
+        Presensi::firstOrCreate(
+            ['id_apel' => $apel->id_apel, 'id_mahasiswa' => Mahasiswa::where('npm', 'TEST_NPM_001')->first()->id_mahasiswa],
+            ['status' => 'hadir', 'waktu_scan' => now()]
+        );
+
         $this->assertGreaterThan(0, Pengguna::count());
         $this->assertGreaterThan(0, Mahasiswa::count());
         $this->assertGreaterThan(0, Apel::count());

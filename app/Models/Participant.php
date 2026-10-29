@@ -146,6 +146,7 @@ class Participant extends Model
         // Jika Timdis memiliki penugasan kelas spesifik (bisa lintas prodi/jurusan)
         if (! empty($classes)) {
             $query->whereIn('class_group', $classes);
+
             return $query;
         }
 

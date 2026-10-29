@@ -52,7 +52,7 @@ class OfficerController extends Controller
         if (! empty($validated['class_groups']) && is_array($validated['class_groups'])) {
             $classGroupFinal = implode(', ', array_unique(array_filter(array_map('trim', $validated['class_groups']))));
         } elseif (! empty($validated['class_group'])) {
-            $classGroupFinal = is_array($validated['class_group']) 
+            $classGroupFinal = is_array($validated['class_group'])
                 ? implode(', ', array_unique(array_filter(array_map('trim', $validated['class_group']))))
                 : trim($validated['class_group']);
         }
@@ -98,7 +98,7 @@ class OfficerController extends Controller
         if (! empty($validated['class_groups']) && is_array($validated['class_groups'])) {
             $classGroupFinal = implode(', ', array_unique(array_filter(array_map('trim', $validated['class_groups']))));
         } elseif (! empty($validated['class_group'])) {
-            $classGroupFinal = is_array($validated['class_group']) 
+            $classGroupFinal = is_array($validated['class_group'])
                 ? implode(', ', array_unique(array_filter(array_map('trim', $validated['class_group']))))
                 : trim($validated['class_group']);
         }

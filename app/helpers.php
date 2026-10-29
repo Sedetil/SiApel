@@ -8,7 +8,7 @@ if (! function_exists('role_route_name')) {
     {
         $prefix = (auth()->check() && auth()->user()->isAdmin()) ? 'admin.' : 'timdis.';
 
-        return $prefix . $name;
+        return $prefix.$name;
     }
 }
 

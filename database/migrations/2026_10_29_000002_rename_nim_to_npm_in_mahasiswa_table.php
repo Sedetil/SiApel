@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (Schema::hasColumn('mahasiswa', 'nim')) {
-            DB::statement('ALTER TABLE `mahasiswa` RENAME COLUMN `nim` TO `npm`');
+        if (Schema::hasTable('mahasiswa') && Schema::hasColumn('mahasiswa', 'nim')) {
+            DB::statement("ALTER TABLE `mahasiswa` CHANGE COLUMN `nim` `npm` VARCHAR(64) NOT NULL COMMENT 'NPM peserta apel'");
         }
     }
 
@@ -21,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasColumn('mahasiswa', 'npm')) {
-            DB::statement('ALTER TABLE `mahasiswa` RENAME COLUMN `npm` TO `nim`');
+        if (Schema::hasTable('mahasiswa') && Schema::hasColumn('mahasiswa', 'npm')) {
+            DB::statement("ALTER TABLE `mahasiswa` CHANGE COLUMN `npm` `nim` VARCHAR(64) NOT NULL COMMENT 'NIM peserta apel'");
         }
     }
 };
-

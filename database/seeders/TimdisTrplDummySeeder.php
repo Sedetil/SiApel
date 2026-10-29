@@ -108,7 +108,7 @@ class TimdisTrplDummySeeder extends Seeder
             );
 
             // RFID Card
-            $cardUid = 'TRPL_' . strtoupper(Str::random(8));
+            $cardUid = 'TRPL_'.strtoupper(Str::random(8));
             RfidCard::firstOrCreate(
                 ['participant_id' => $participant->id],
                 [

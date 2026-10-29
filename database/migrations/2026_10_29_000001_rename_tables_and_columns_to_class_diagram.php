@@ -11,98 +11,232 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Drop existing Foreign Keys that reference tables/columns to be renamed
-        DB::statement('ALTER TABLE `apel_schedules` DROP FOREIGN KEY `apel_schedules_created_by_foreign`');
-        DB::statement('ALTER TABLE `attendance_events` DROP FOREIGN KEY `attendance_events_apel_schedule_id_foreign`');
-        DB::statement('ALTER TABLE `attendance_events` DROP FOREIGN KEY `attendance_events_participant_id_foreign`');
-        DB::statement('ALTER TABLE `attendance_records` DROP FOREIGN KEY `attendance_records_apel_schedule_id_foreign`');
-        DB::statement('ALTER TABLE `attendance_records` DROP FOREIGN KEY `attendance_records_participant_id_foreign`');
-        DB::statement('ALTER TABLE `attendance_records` DROP FOREIGN KEY `attendance_records_recorded_by_foreign`');
-        DB::statement('ALTER TABLE `attendance_records` DROP FOREIGN KEY `attendance_records_rfid_card_id_foreign`');
-        DB::statement('ALTER TABLE `audit_logs` DROP FOREIGN KEY `audit_logs_user_id_foreign`');
-        DB::statement('ALTER TABLE `ekuliah_sync_logs` DROP FOREIGN KEY `ekuliah_sync_logs_synced_by_foreign`');
-        DB::statement('ALTER TABLE `permission_requests` DROP FOREIGN KEY `permission_requests_apel_schedule_id_foreign`');
-        DB::statement('ALTER TABLE `permission_requests` DROP FOREIGN KEY `permission_requests_decided_by_foreign`');
-        DB::statement('ALTER TABLE `permission_requests` DROP FOREIGN KEY `permission_requests_participant_id_foreign`');
-        DB::statement('ALTER TABLE `rfid_cards` DROP FOREIGN KEY `rfid_cards_participant_id_foreign`');
+        // 1. Drop existing Foreign Keys safely (DROP CONSTRAINT IF EXISTS in MariaDB)
+        $foreignKeysToDrop = [
+            ['table' => 'apel_schedules', 'fk' => 'apel_schedules_created_by_foreign'],
+            ['table' => 'attendance_events', 'fk' => 'attendance_events_apel_schedule_id_foreign'],
+            ['table' => 'attendance_events', 'fk' => 'attendance_events_participant_id_foreign'],
+            ['table' => 'attendance_records', 'fk' => 'attendance_records_apel_schedule_id_foreign'],
+            ['table' => 'attendance_records', 'fk' => 'attendance_records_participant_id_foreign'],
+            ['table' => 'attendance_records', 'fk' => 'attendance_records_recorded_by_foreign'],
+            ['table' => 'attendance_records', 'fk' => 'attendance_records_rfid_card_id_foreign'],
+            ['table' => 'audit_logs', 'fk' => 'audit_logs_user_id_foreign'],
+            ['table' => 'ekuliah_sync_logs', 'fk' => 'ekuliah_sync_logs_synced_by_foreign'],
+            ['table' => 'permission_requests', 'fk' => 'permission_requests_apel_schedule_id_foreign'],
+            ['table' => 'permission_requests', 'fk' => 'permission_requests_decided_by_foreign'],
+            ['table' => 'permission_requests', 'fk' => 'permission_requests_participant_id_foreign'],
+            ['table' => 'rfid_cards', 'fk' => 'rfid_cards_participant_id_foreign'],
+        ];
+
+        foreach ($foreignKeysToDrop as $item) {
+            if (Schema::hasTable($item['table'])) {
+                DB::statement("ALTER TABLE `{$item['table']}` DROP CONSTRAINT IF EXISTS `{$item['fk']}`");
+            }
+        }
 
         // 2. Rename columns and table: users -> pengguna
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `id` TO `id_pengguna`');
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `name` TO `nama`');
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `password` TO `kata_sandi`');
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `avatar` TO `foto_profil`');
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `role` TO `peran`');
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `study_program` TO `prodi_binaan`');
-        DB::statement('RENAME TABLE `users` TO `pengguna`');
+        if (Schema::hasTable('users')) {
+            if (Schema::hasColumn('users', 'id')) {
+                DB::statement('ALTER TABLE `users` CHANGE COLUMN `id` `id_pengguna` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('users', 'name')) {
+                DB::statement('ALTER TABLE `users` CHANGE COLUMN `name` `nama` VARCHAR(255) NOT NULL');
+            }
+            if (Schema::hasColumn('users', 'password')) {
+                DB::statement('ALTER TABLE `users` CHANGE COLUMN `password` `kata_sandi` VARCHAR(255) NOT NULL');
+            }
+            if (Schema::hasColumn('users', 'avatar')) {
+                DB::statement('ALTER TABLE `users` CHANGE COLUMN `avatar` `foto_profil` VARCHAR(255) NULL');
+            }
+            if (Schema::hasColumn('users', 'role')) {
+                DB::statement("ALTER TABLE `users` CHANGE COLUMN `role` `peran` VARCHAR(20) NOT NULL DEFAULT 'petugas'");
+            }
+            if (Schema::hasColumn('users', 'study_program')) {
+                DB::statement('ALTER TABLE `users` CHANGE COLUMN `study_program` `prodi_binaan` VARCHAR(150) NULL');
+            }
+            DB::statement('RENAME TABLE `users` TO `pengguna`');
+        }
 
         // 3. Rename columns and table: participants -> mahasiswa
-        DB::statement('ALTER TABLE `participants` RENAME COLUMN `id` TO `id_mahasiswa`');
-        DB::statement('ALTER TABLE `participants` RENAME COLUMN `identifier` TO `nim`');
-        DB::statement('ALTER TABLE `participants` RENAME COLUMN `name` TO `nama`');
-        DB::statement('ALTER TABLE `participants` RENAME COLUMN `class_group` TO `kelas`');
-        if (! Schema::hasColumn('participants', 'id_rfid')) {
-            DB::statement('ALTER TABLE `participants` ADD COLUMN `id_rfid` BIGINT UNSIGNED NULL AFTER `kode_qr`');
+        if (Schema::hasTable('participants')) {
+            if (Schema::hasColumn('participants', 'id')) {
+                DB::statement('ALTER TABLE `participants` CHANGE COLUMN `id` `id_mahasiswa` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('participants', 'identifier')) {
+                DB::statement("ALTER TABLE `participants` CHANGE COLUMN `identifier` `nim` VARCHAR(64) NOT NULL COMMENT 'NPM / NIM peserta apel'");
+            }
+            if (Schema::hasColumn('participants', 'name')) {
+                DB::statement('ALTER TABLE `participants` CHANGE COLUMN `name` `nama` VARCHAR(255) NOT NULL');
+            }
+            if (Schema::hasColumn('participants', 'class_group')) {
+                DB::statement("ALTER TABLE `participants` CHANGE COLUMN `class_group` `kelas` VARCHAR(50) NULL COMMENT 'Kompi / Pleton / Kelas'");
+            }
+            if (! Schema::hasColumn('participants', 'id_rfid')) {
+                DB::statement('ALTER TABLE `participants` ADD COLUMN `id_rfid` BIGINT UNSIGNED NULL AFTER `kode_qr`');
+            }
+            DB::statement('RENAME TABLE `participants` TO `mahasiswa`');
         }
-        DB::statement('RENAME TABLE `participants` TO `mahasiswa`');
 
         // 4. Rename columns and table: apel_schedules -> apel
-        DB::statement('ALTER TABLE `apel_schedules` RENAME COLUMN `id` TO `id_apel`');
-        DB::statement('ALTER TABLE `apel_schedules` RENAME COLUMN `schedule_date` TO `tanggal`');
-        DB::statement('ALTER TABLE `apel_schedules` RENAME COLUMN `start_time` TO `jam_mulai`');
-        DB::statement('ALTER TABLE `apel_schedules` RENAME COLUMN `end_time` TO `jam_selesai`');
-        DB::statement('ALTER TABLE `apel_schedules` RENAME COLUMN `category` TO `jenis`');
-        DB::statement('RENAME TABLE `apel_schedules` TO `apel`');
+        if (Schema::hasTable('apel_schedules')) {
+            if (Schema::hasColumn('apel_schedules', 'id')) {
+                DB::statement('ALTER TABLE `apel_schedules` CHANGE COLUMN `id` `id_apel` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('apel_schedules', 'schedule_date')) {
+                DB::statement('ALTER TABLE `apel_schedules` CHANGE COLUMN `schedule_date` `tanggal` DATE NOT NULL');
+            }
+            if (Schema::hasColumn('apel_schedules', 'start_time')) {
+                DB::statement('ALTER TABLE `apel_schedules` CHANGE COLUMN `start_time` `jam_mulai` TIME NOT NULL');
+            }
+            if (Schema::hasColumn('apel_schedules', 'end_time')) {
+                DB::statement('ALTER TABLE `apel_schedules` CHANGE COLUMN `end_time` `jam_selesai` TIME NOT NULL');
+            }
+            if (Schema::hasColumn('apel_schedules', 'category')) {
+                DB::statement("ALTER TABLE `apel_schedules` CHANGE COLUMN `category` `jenis` ENUM('rutin','tambahan','khusus') NOT NULL DEFAULT 'rutin'");
+            }
+            DB::statement('RENAME TABLE `apel_schedules` TO `apel`');
+        }
 
         // 5. Rename columns and table: attendance_records -> presensi
-        DB::statement('ALTER TABLE `attendance_records` RENAME COLUMN `id` TO `id_presensi`');
-        DB::statement('ALTER TABLE `attendance_records` RENAME COLUMN `apel_schedule_id` TO `id_apel`');
-        DB::statement('ALTER TABLE `attendance_records` RENAME COLUMN `participant_id` TO `id_mahasiswa`');
-        DB::statement('ALTER TABLE `attendance_records` RENAME COLUMN `check_in_time` TO `waktu_scan`');
-        DB::statement('RENAME TABLE `attendance_records` TO `presensi`');
+        if (Schema::hasTable('attendance_records')) {
+            if (Schema::hasColumn('attendance_records', 'id')) {
+                DB::statement('ALTER TABLE `attendance_records` CHANGE COLUMN `id` `id_presensi` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('attendance_records', 'apel_schedule_id')) {
+                DB::statement('ALTER TABLE `attendance_records` CHANGE COLUMN `apel_schedule_id` `id_apel` BIGINT UNSIGNED NOT NULL');
+            }
+            if (Schema::hasColumn('attendance_records', 'participant_id')) {
+                DB::statement('ALTER TABLE `attendance_records` CHANGE COLUMN `participant_id` `id_mahasiswa` BIGINT UNSIGNED NOT NULL');
+            }
+            if (Schema::hasColumn('attendance_records', 'check_in_time')) {
+                DB::statement('ALTER TABLE `attendance_records` CHANGE COLUMN `check_in_time` `waktu_scan` TIMESTAMP NULL DEFAULT NULL');
+            }
+            DB::statement('RENAME TABLE `attendance_records` TO `presensi`');
+        }
 
         // 6. Rename columns and table: permission_requests -> pengajuan_izin
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `id` TO `id_izin`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `participant_id` TO `id_mahasiswa`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `apel_schedule_id` TO `id_apel`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `decided_by` TO `id_timdis`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `type` TO `jenis`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `reason` TO `alasan`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `attachment_path` TO `berkas_bukti`');
-        DB::statement('RENAME TABLE `permission_requests` TO `pengajuan_izin`');
+        if (Schema::hasTable('permission_requests')) {
+            if (Schema::hasColumn('permission_requests', 'id')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `id` `id_izin` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('permission_requests', 'participant_id')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `participant_id` `id_mahasiswa` BIGINT UNSIGNED NOT NULL');
+            }
+            if (Schema::hasColumn('permission_requests', 'apel_schedule_id')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `apel_schedule_id` `id_apel` BIGINT UNSIGNED NULL DEFAULT NULL');
+            }
+            if (Schema::hasColumn('permission_requests', 'decided_by')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `decided_by` `id_timdis` BIGINT UNSIGNED NULL DEFAULT NULL');
+            }
+            if (Schema::hasColumn('permission_requests', 'type')) {
+                DB::statement("ALTER TABLE `permission_requests` CHANGE COLUMN `type` `jenis` ENUM('izin','sakit') NOT NULL DEFAULT 'izin'");
+            }
+            if (Schema::hasColumn('permission_requests', 'reason')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `reason` `alasan` TEXT NOT NULL');
+            }
+            if (Schema::hasColumn('permission_requests', 'attachment_path')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `attachment_path` `berkas_bukti` VARCHAR(255) NULL DEFAULT NULL');
+            }
+            DB::statement('RENAME TABLE `permission_requests` TO `pengajuan_izin`');
+        }
 
         // 7. Rename columns and table: ekuliah_sync_logs -> log_sinkronisasi
-        DB::statement('ALTER TABLE `ekuliah_sync_logs` RENAME COLUMN `id` TO `id_sinkron`');
-        DB::statement('ALTER TABLE `ekuliah_sync_logs` RENAME COLUMN `records_synced` TO `jumlah_data`');
-        DB::statement('ALTER TABLE `ekuliah_sync_logs` RENAME COLUMN `synced_by` TO `id_admin`');
-        if (! Schema::hasColumn('ekuliah_sync_logs', 'waktu')) {
-            DB::statement('ALTER TABLE `ekuliah_sync_logs` ADD COLUMN `waktu` DATETIME NULL AFTER `id_admin`');
-            DB::statement('UPDATE `ekuliah_sync_logs` SET `waktu` = `created_at`');
+        if (Schema::hasTable('ekuliah_sync_logs')) {
+            if (Schema::hasColumn('ekuliah_sync_logs', 'id')) {
+                DB::statement('ALTER TABLE `ekuliah_sync_logs` CHANGE COLUMN `id` `id_sinkron` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('ekuliah_sync_logs', 'records_synced')) {
+                DB::statement('ALTER TABLE `ekuliah_sync_logs` CHANGE COLUMN `records_synced` `jumlah_data` INT UNSIGNED NOT NULL DEFAULT 0');
+            }
+            if (Schema::hasColumn('ekuliah_sync_logs', 'synced_by')) {
+                DB::statement('ALTER TABLE `ekuliah_sync_logs` CHANGE COLUMN `synced_by` `id_admin` BIGINT UNSIGNED NULL DEFAULT NULL');
+            }
+            if (! Schema::hasColumn('ekuliah_sync_logs', 'waktu')) {
+                DB::statement('ALTER TABLE `ekuliah_sync_logs` ADD COLUMN `waktu` DATETIME NULL AFTER `id_admin`');
+                DB::statement('UPDATE `ekuliah_sync_logs` SET `waktu` = `created_at`');
+            }
+            DB::statement('RENAME TABLE `ekuliah_sync_logs` TO `log_sinkronisasi`');
         }
-        DB::statement('RENAME TABLE `ekuliah_sync_logs` TO `log_sinkronisasi`');
 
         // 8. Update FK column names in other related tables
-        DB::statement('ALTER TABLE `attendance_events` RENAME COLUMN `apel_schedule_id` TO `id_apel`');
-        DB::statement('ALTER TABLE `attendance_events` RENAME COLUMN `participant_id` TO `id_mahasiswa`');
-        DB::statement('ALTER TABLE `rfid_cards` RENAME COLUMN `participant_id` TO `id_mahasiswa`');
-        DB::statement('ALTER TABLE `audit_logs` RENAME COLUMN `user_id` TO `id_pengguna`');
+        if (Schema::hasTable('attendance_events')) {
+            if (Schema::hasColumn('attendance_events', 'apel_schedule_id')) {
+                DB::statement('ALTER TABLE `attendance_events` CHANGE COLUMN `apel_schedule_id` `id_apel` BIGINT UNSIGNED NULL DEFAULT NULL');
+            }
+            if (Schema::hasColumn('attendance_events', 'participant_id')) {
+                DB::statement('ALTER TABLE `attendance_events` CHANGE COLUMN `participant_id` `id_mahasiswa` BIGINT UNSIGNED NULL DEFAULT NULL');
+            }
+        }
+
+        if (Schema::hasTable('rfid_cards')) {
+            if (Schema::hasColumn('rfid_cards', 'participant_id')) {
+                DB::statement('ALTER TABLE `rfid_cards` CHANGE COLUMN `participant_id` `id_mahasiswa` BIGINT UNSIGNED NOT NULL');
+            }
+        }
+
+        if (Schema::hasTable('audit_logs')) {
+            if (Schema::hasColumn('audit_logs', 'user_id')) {
+                DB::statement('ALTER TABLE `audit_logs` CHANGE COLUMN `user_id` `id_pengguna` BIGINT UNSIGNED NULL DEFAULT NULL');
+            }
+        }
 
         // 9. Re-add foreign keys pointing to new tables & columns
-        DB::statement('ALTER TABLE `apel` ADD CONSTRAINT `apel_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `presensi` ADD CONSTRAINT `presensi_id_apel_foreign` FOREIGN KEY (`id_apel`) REFERENCES `apel` (`id_apel`) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE `presensi` ADD CONSTRAINT `presensi_id_mahasiswa_foreign` FOREIGN KEY (`id_mahasiswa`) REFERENCES `mahasiswa` (`id_mahasiswa`) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE `presensi` ADD CONSTRAINT `presensi_recorded_by_foreign` FOREIGN KEY (`recorded_by`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `presensi` ADD CONSTRAINT `presensi_rfid_card_id_foreign` FOREIGN KEY (`rfid_card_id`) REFERENCES `rfid_cards` (`id`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `pengajuan_izin` ADD CONSTRAINT `pengajuan_izin_id_apel_foreign` FOREIGN KEY (`id_apel`) REFERENCES `apel` (`id_apel`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `pengajuan_izin` ADD CONSTRAINT `pengajuan_izin_id_mahasiswa_foreign` FOREIGN KEY (`id_mahasiswa`) REFERENCES `mahasiswa` (`id_mahasiswa`) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE `pengajuan_izin` ADD CONSTRAINT `pengajuan_izin_id_timdis_foreign` FOREIGN KEY (`id_timdis`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `log_sinkronisasi` ADD CONSTRAINT `log_sinkronisasi_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `attendance_events` ADD CONSTRAINT `attendance_events_id_apel_foreign` FOREIGN KEY (`id_apel`) REFERENCES `apel` (`id_apel`) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE `attendance_events` ADD CONSTRAINT `attendance_events_id_mahasiswa_foreign` FOREIGN KEY (`id_mahasiswa`) REFERENCES `mahasiswa` (`id_mahasiswa`) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE `rfid_cards` ADD CONSTRAINT `rfid_cards_id_mahasiswa_foreign` FOREIGN KEY (`id_mahasiswa`) REFERENCES `mahasiswa` (`id_mahasiswa`) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE `audit_logs` ADD CONSTRAINT `audit_logs_id_pengguna_foreign` FOREIGN KEY (`id_pengguna`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE SET NULL');
+        if (Schema::hasTable('apel') && Schema::hasTable('pengguna')) {
+            DB::statement('ALTER TABLE `apel` ADD CONSTRAINT `apel_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE SET NULL');
+        }
+
+        if (Schema::hasTable('presensi')) {
+            if (Schema::hasTable('apel')) {
+                DB::statement('ALTER TABLE `presensi` ADD CONSTRAINT `presensi_id_apel_foreign` FOREIGN KEY (`id_apel`) REFERENCES `apel` (`id_apel`) ON DELETE CASCADE');
+            }
+            if (Schema::hasTable('mahasiswa')) {
+                DB::statement('ALTER TABLE `presensi` ADD CONSTRAINT `presensi_id_mahasiswa_foreign` FOREIGN KEY (`id_mahasiswa`) REFERENCES `mahasiswa` (`id_mahasiswa`) ON DELETE CASCADE');
+            }
+            if (Schema::hasTable('pengguna')) {
+                DB::statement('ALTER TABLE `presensi` ADD CONSTRAINT `presensi_recorded_by_foreign` FOREIGN KEY (`recorded_by`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE SET NULL');
+            }
+            if (Schema::hasTable('rfid_cards')) {
+                DB::statement('ALTER TABLE `presensi` ADD CONSTRAINT `presensi_rfid_card_id_foreign` FOREIGN KEY (`rfid_card_id`) REFERENCES `rfid_cards` (`id`) ON DELETE SET NULL');
+            }
+        }
+
+        if (Schema::hasTable('pengajuan_izin')) {
+            if (Schema::hasTable('apel')) {
+                DB::statement('ALTER TABLE `pengajuan_izin` ADD CONSTRAINT `pengajuan_izin_id_apel_foreign` FOREIGN KEY (`id_apel`) REFERENCES `apel` (`id_apel`) ON DELETE SET NULL');
+            }
+            if (Schema::hasTable('mahasiswa')) {
+                DB::statement('ALTER TABLE `pengajuan_izin` ADD CONSTRAINT `pengajuan_izin_id_mahasiswa_foreign` FOREIGN KEY (`id_mahasiswa`) REFERENCES `mahasiswa` (`id_mahasiswa`) ON DELETE CASCADE');
+            }
+            if (Schema::hasTable('pengguna')) {
+                DB::statement('ALTER TABLE `pengajuan_izin` ADD CONSTRAINT `pengajuan_izin_id_timdis_foreign` FOREIGN KEY (`id_timdis`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE SET NULL');
+            }
+        }
+
+        if (Schema::hasTable('log_sinkronisasi') && Schema::hasTable('pengguna')) {
+            DB::statement('ALTER TABLE `log_sinkronisasi` ADD CONSTRAINT `log_sinkronisasi_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE SET NULL');
+        }
+
+        if (Schema::hasTable('attendance_events')) {
+            if (Schema::hasTable('apel')) {
+                DB::statement('ALTER TABLE `attendance_events` ADD CONSTRAINT `attendance_events_id_apel_foreign` FOREIGN KEY (`id_apel`) REFERENCES `apel` (`id_apel`) ON DELETE CASCADE');
+            }
+            if (Schema::hasTable('mahasiswa')) {
+                DB::statement('ALTER TABLE `attendance_events` ADD CONSTRAINT `attendance_events_id_mahasiswa_foreign` FOREIGN KEY (`id_mahasiswa`) REFERENCES `mahasiswa` (`id_mahasiswa`) ON DELETE CASCADE');
+            }
+        }
+
+        if (Schema::hasTable('rfid_cards') && Schema::hasTable('mahasiswa')) {
+            DB::statement('ALTER TABLE `rfid_cards` ADD CONSTRAINT `rfid_cards_id_mahasiswa_foreign` FOREIGN KEY (`id_mahasiswa`) REFERENCES `mahasiswa` (`id_mahasiswa`) ON DELETE CASCADE');
+        }
+
+        if (Schema::hasTable('audit_logs') && Schema::hasTable('pengguna')) {
+            DB::statement('ALTER TABLE `audit_logs` ADD CONSTRAINT `audit_logs_id_pengguna_foreign` FOREIGN KEY (`id_pengguna`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE SET NULL');
+        }
 
         // Populate id_rfid on mahasiswa if active rfid_card exists
-        DB::statement('UPDATE `mahasiswa` m JOIN `rfid_cards` r ON r.id_mahasiswa = m.id_mahasiswa AND r.is_active = 1 SET m.id_rfid = r.id');
+        if (Schema::hasTable('mahasiswa') && Schema::hasTable('rfid_cards') && Schema::hasColumn('mahasiswa', 'id_rfid')) {
+            DB::statement('UPDATE `mahasiswa` m JOIN `rfid_cards` r ON r.id_mahasiswa = m.id_mahasiswa AND r.is_active = 1 SET m.id_rfid = r.id');
+        }
     }
 
     /**
@@ -110,81 +244,163 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop new foreign keys
-        DB::statement('ALTER TABLE `apel` DROP FOREIGN KEY `apel_created_by_foreign`');
-        DB::statement('ALTER TABLE `presensi` DROP FOREIGN KEY `presensi_id_apel_foreign`');
-        DB::statement('ALTER TABLE `presensi` DROP FOREIGN KEY `presensi_id_mahasiswa_foreign`');
-        DB::statement('ALTER TABLE `presensi` DROP FOREIGN KEY `presensi_recorded_by_foreign`');
-        DB::statement('ALTER TABLE `presensi` DROP FOREIGN KEY `presensi_rfid_card_id_foreign`');
-        DB::statement('ALTER TABLE `pengajuan_izin` DROP FOREIGN KEY `pengajuan_izin_id_apel_foreign`');
-        DB::statement('ALTER TABLE `pengajuan_izin` DROP FOREIGN KEY `pengajuan_izin_id_mahasiswa_foreign`');
-        DB::statement('ALTER TABLE `pengajuan_izin` DROP FOREIGN KEY `pengajuan_izin_id_timdis_foreign`');
-        DB::statement('ALTER TABLE `log_sinkronisasi` DROP FOREIGN KEY `log_sinkronisasi_id_admin_foreign`');
-        DB::statement('ALTER TABLE `attendance_events` DROP FOREIGN KEY `attendance_events_id_apel_foreign`');
-        DB::statement('ALTER TABLE `attendance_events` DROP FOREIGN KEY `attendance_events_id_mahasiswa_foreign`');
-        DB::statement('ALTER TABLE `rfid_cards` DROP FOREIGN KEY `rfid_cards_id_mahasiswa_foreign`');
-        DB::statement('ALTER TABLE `audit_logs` DROP FOREIGN KEY `audit_logs_id_pengguna_foreign`');
+        // Drop new foreign keys safely
+        $foreignKeysToDrop = [
+            ['table' => 'apel', 'fk' => 'apel_created_by_foreign'],
+            ['table' => 'presensi', 'fk' => 'presensi_id_apel_foreign'],
+            ['table' => 'presensi', 'fk' => 'presensi_id_mahasiswa_foreign'],
+            ['table' => 'presensi', 'fk' => 'presensi_recorded_by_foreign'],
+            ['table' => 'presensi', 'fk' => 'presensi_rfid_card_id_foreign'],
+            ['table' => 'pengajuan_izin', 'fk' => 'pengajuan_izin_id_apel_foreign'],
+            ['table' => 'pengajuan_izin', 'fk' => 'pengajuan_izin_id_mahasiswa_foreign'],
+            ['table' => 'pengajuan_izin', 'fk' => 'pengajuan_izin_id_timdis_foreign'],
+            ['table' => 'log_sinkronisasi', 'fk' => 'log_sinkronisasi_id_admin_foreign'],
+            ['table' => 'attendance_events', 'fk' => 'attendance_events_id_apel_foreign'],
+            ['table' => 'attendance_events', 'fk' => 'attendance_events_id_mahasiswa_foreign'],
+            ['table' => 'rfid_cards', 'fk' => 'rfid_cards_id_mahasiswa_foreign'],
+            ['table' => 'audit_logs', 'fk' => 'audit_logs_id_pengguna_foreign'],
+        ];
 
-        // Revert tables and column names
-        DB::statement('ALTER TABLE `audit_logs` RENAME COLUMN `id_pengguna` TO `user_id`');
-        DB::statement('ALTER TABLE `rfid_cards` RENAME COLUMN `id_mahasiswa` TO `participant_id`');
-        DB::statement('ALTER TABLE `attendance_events` RENAME COLUMN `id_apel` TO `apel_schedule_id`');
-        DB::statement('ALTER TABLE `attendance_events` RENAME COLUMN `id_mahasiswa` TO `participant_id`');
+        foreach ($foreignKeysToDrop as $item) {
+            if (Schema::hasTable($item['table'])) {
+                DB::statement("ALTER TABLE `{$item['table']}` DROP CONSTRAINT IF EXISTS `{$item['fk']}`");
+            }
+        }
 
-        DB::statement('RENAME TABLE `log_sinkronisasi` TO `ekuliah_sync_logs`');
-        DB::statement('ALTER TABLE `ekuliah_sync_logs` RENAME COLUMN `id_sinkron` TO `id`');
-        DB::statement('ALTER TABLE `ekuliah_sync_logs` RENAME COLUMN `jumlah_data` TO `records_synced`');
-        DB::statement('ALTER TABLE `ekuliah_sync_logs` RENAME COLUMN `id_admin` TO `synced_by`');
+        // Revert related table columns
+        if (Schema::hasTable('audit_logs') && Schema::hasColumn('audit_logs', 'id_pengguna')) {
+            DB::statement('ALTER TABLE `audit_logs` CHANGE COLUMN `id_pengguna` `user_id` BIGINT UNSIGNED NULL DEFAULT NULL');
+        }
 
-        DB::statement('RENAME TABLE `pengajuan_izin` TO `permission_requests`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `id_izin` TO `id`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `id_mahasiswa` TO `participant_id`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `id_apel` TO `apel_schedule_id`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `id_timdis` TO `decided_by`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `jenis` TO `type`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `alasan` TO `reason`');
-        DB::statement('ALTER TABLE `permission_requests` RENAME COLUMN `berkas_bukti` TO `attachment_path`');
+        if (Schema::hasTable('rfid_cards') && Schema::hasColumn('rfid_cards', 'id_mahasiswa')) {
+            DB::statement('ALTER TABLE `rfid_cards` CHANGE COLUMN `id_mahasiswa` `participant_id` BIGINT UNSIGNED NOT NULL');
+        }
 
-        DB::statement('RENAME TABLE `presensi` TO `attendance_records`');
-        DB::statement('ALTER TABLE `attendance_records` RENAME COLUMN `id_presensi` TO `id`');
-        DB::statement('ALTER TABLE `attendance_records` RENAME COLUMN `id_apel` TO `apel_schedule_id`');
-        DB::statement('ALTER TABLE `attendance_records` RENAME COLUMN `id_mahasiswa` TO `participant_id`');
-        DB::statement('ALTER TABLE `attendance_records` RENAME COLUMN `waktu_scan` TO `check_in_time`');
+        if (Schema::hasTable('attendance_events')) {
+            if (Schema::hasColumn('attendance_events', 'id_apel')) {
+                DB::statement('ALTER TABLE `attendance_events` CHANGE COLUMN `id_apel` `apel_schedule_id` BIGINT UNSIGNED NULL DEFAULT NULL');
+            }
+            if (Schema::hasColumn('attendance_events', 'id_mahasiswa')) {
+                DB::statement('ALTER TABLE `attendance_events` CHANGE COLUMN `id_mahasiswa` `participant_id` BIGINT UNSIGNED NULL DEFAULT NULL');
+            }
+        }
 
-        DB::statement('RENAME TABLE `apel` TO `apel_schedules`');
-        DB::statement('ALTER TABLE `apel_schedules` RENAME COLUMN `id_apel` TO `id`');
-        DB::statement('ALTER TABLE `apel_schedules` RENAME COLUMN `tanggal` TO `schedule_date`');
-        DB::statement('ALTER TABLE `apel_schedules` RENAME COLUMN `jam_mulai` TO `start_time`');
-        DB::statement('ALTER TABLE `apel_schedules` RENAME COLUMN `jam_selesai` TO `end_time`');
-        DB::statement('ALTER TABLE `apel_schedules` RENAME COLUMN `jenis` TO `category`');
+        // Revert log_sinkronisasi -> ekuliah_sync_logs
+        if (Schema::hasTable('log_sinkronisasi')) {
+            DB::statement('RENAME TABLE `log_sinkronisasi` TO `ekuliah_sync_logs`');
+            if (Schema::hasColumn('ekuliah_sync_logs', 'id_sinkron')) {
+                DB::statement('ALTER TABLE `ekuliah_sync_logs` CHANGE COLUMN `id_sinkron` `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('ekuliah_sync_logs', 'jumlah_data')) {
+                DB::statement('ALTER TABLE `ekuliah_sync_logs` CHANGE COLUMN `jumlah_data` `records_synced` INT UNSIGNED NOT NULL DEFAULT 0');
+            }
+            if (Schema::hasColumn('ekuliah_sync_logs', 'id_admin')) {
+                DB::statement('ALTER TABLE `ekuliah_sync_logs` CHANGE COLUMN `id_admin` `synced_by` BIGINT UNSIGNED NULL DEFAULT NULL');
+            }
+        }
 
-        DB::statement('RENAME TABLE `mahasiswa` TO `participants`');
-        DB::statement('ALTER TABLE `participants` RENAME COLUMN `id_mahasiswa` TO `id`');
-        DB::statement('ALTER TABLE `participants` RENAME COLUMN `nim` TO `identifier`');
-        DB::statement('ALTER TABLE `participants` RENAME COLUMN `nama` TO `name`');
-        DB::statement('ALTER TABLE `participants` RENAME COLUMN `kelas` TO `class_group`');
+        // Revert pengajuan_izin -> permission_requests
+        if (Schema::hasTable('pengajuan_izin')) {
+            DB::statement('RENAME TABLE `pengajuan_izin` TO `permission_requests`');
+            if (Schema::hasColumn('permission_requests', 'id_izin')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `id_izin` `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('permission_requests', 'id_mahasiswa')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `id_mahasiswa` `participant_id` BIGINT UNSIGNED NOT NULL');
+            }
+            if (Schema::hasColumn('permission_requests', 'id_apel')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `id_apel` `apel_schedule_id` BIGINT UNSIGNED NULL DEFAULT NULL');
+            }
+            if (Schema::hasColumn('permission_requests', 'id_timdis')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `id_timdis` `decided_by` BIGINT UNSIGNED NULL DEFAULT NULL');
+            }
+            if (Schema::hasColumn('permission_requests', 'jenis')) {
+                DB::statement("ALTER TABLE `permission_requests` CHANGE COLUMN `jenis` `type` ENUM('izin','sakit') NOT NULL DEFAULT 'izin'");
+            }
+            if (Schema::hasColumn('permission_requests', 'alasan')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `alasan` `reason` TEXT NOT NULL');
+            }
+            if (Schema::hasColumn('permission_requests', 'berkas_bukti')) {
+                DB::statement('ALTER TABLE `permission_requests` CHANGE COLUMN `berkas_bukti` `attachment_path` VARCHAR(255) NULL DEFAULT NULL');
+            }
+        }
 
-        DB::statement('RENAME TABLE `pengguna` TO `users`');
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `id_pengguna` TO `id`');
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `nama` TO `name`');
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `kata_sandi` TO `password`');
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `foto_profil` TO `avatar`');
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `peran` TO `role`');
-        DB::statement('ALTER TABLE `users` RENAME COLUMN `prodi_binaan` TO `study_program`');
+        // Revert presensi -> attendance_records
+        if (Schema::hasTable('presensi')) {
+            DB::statement('RENAME TABLE `presensi` TO `attendance_records`');
+            if (Schema::hasColumn('attendance_records', 'id_presensi')) {
+                DB::statement('ALTER TABLE `attendance_records` CHANGE COLUMN `id_presensi` `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('attendance_records', 'id_apel')) {
+                DB::statement('ALTER TABLE `attendance_records` CHANGE COLUMN `id_apel` `apel_schedule_id` BIGINT UNSIGNED NOT NULL');
+            }
+            if (Schema::hasColumn('attendance_records', 'id_mahasiswa')) {
+                DB::statement('ALTER TABLE `attendance_records` CHANGE COLUMN `id_mahasiswa` `participant_id` BIGINT UNSIGNED NOT NULL');
+            }
+            if (Schema::hasColumn('attendance_records', 'waktu_scan')) {
+                DB::statement('ALTER TABLE `attendance_records` CHANGE COLUMN `waktu_scan` `check_in_time` TIMESTAMP NULL DEFAULT NULL');
+            }
+        }
 
-        // Re-add original foreign keys
-        DB::statement('ALTER TABLE `apel_schedules` ADD CONSTRAINT `apel_schedules_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `attendance_events` ADD CONSTRAINT `attendance_events_apel_schedule_id_foreign` FOREIGN KEY (`apel_schedule_id`) REFERENCES `apel_schedules` (`id`) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE `attendance_events` ADD CONSTRAINT `attendance_events_participant_id_foreign` FOREIGN KEY (`participant_id`) REFERENCES `participants` (`id`) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE `attendance_records` ADD CONSTRAINT `attendance_records_apel_schedule_id_foreign` FOREIGN KEY (`apel_schedule_id`) REFERENCES `apel_schedules` (`id`) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE `attendance_records` ADD CONSTRAINT `attendance_records_participant_id_foreign` FOREIGN KEY (`participant_id`) REFERENCES `participants` (`id`) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE `attendance_records` ADD CONSTRAINT `attendance_records_recorded_by_foreign` FOREIGN KEY (`recorded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `attendance_records` ADD CONSTRAINT `attendance_records_rfid_card_id_foreign` FOREIGN KEY (`rfid_card_id`) REFERENCES `rfid_cards` (`id`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `audit_logs` ADD CONSTRAINT `audit_logs_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `ekuliah_sync_logs` ADD CONSTRAINT `ekuliah_sync_logs_synced_by_foreign` FOREIGN KEY (`synced_by`) REFERENCES `users` (`id`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `permission_requests` ADD CONSTRAINT `permission_requests_apel_schedule_id_foreign` FOREIGN KEY (`apel_schedule_id`) REFERENCES `apel_schedules` (`id`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `permission_requests` ADD CONSTRAINT `permission_requests_decided_by_foreign` FOREIGN KEY (`decided_by`) REFERENCES `users` (`id`) ON DELETE SET NULL');
-        DB::statement('ALTER TABLE `permission_requests` ADD CONSTRAINT `permission_requests_participant_id_foreign` FOREIGN KEY (`participant_id`) REFERENCES `participants` (`id`) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE `rfid_cards` ADD CONSTRAINT `rfid_cards_participant_id_foreign` FOREIGN KEY (`participant_id`) REFERENCES `participants` (`id`) ON DELETE CASCADE');
+        // Revert apel -> apel_schedules
+        if (Schema::hasTable('apel')) {
+            DB::statement('RENAME TABLE `apel` TO `apel_schedules`');
+            if (Schema::hasColumn('apel_schedules', 'id_apel')) {
+                DB::statement('ALTER TABLE `apel_schedules` CHANGE COLUMN `id_apel` `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('apel_schedules', 'tanggal')) {
+                DB::statement('ALTER TABLE `apel_schedules` CHANGE COLUMN `tanggal` `schedule_date` DATE NOT NULL');
+            }
+            if (Schema::hasColumn('apel_schedules', 'jam_mulai')) {
+                DB::statement('ALTER TABLE `apel_schedules` CHANGE COLUMN `jam_mulai` `start_time` TIME NOT NULL');
+            }
+            if (Schema::hasColumn('apel_schedules', 'jam_selesai')) {
+                DB::statement('ALTER TABLE `apel_schedules` CHANGE COLUMN `jam_selesai` `end_time` TIME NOT NULL');
+            }
+            if (Schema::hasColumn('apel_schedules', 'jenis')) {
+                DB::statement("ALTER TABLE `apel_schedules` CHANGE COLUMN `jenis` `category` ENUM('rutin','tambahan','khusus') NOT NULL DEFAULT 'rutin'");
+            }
+        }
+
+        // Revert mahasiswa -> participants
+        if (Schema::hasTable('mahasiswa')) {
+            DB::statement('RENAME TABLE `mahasiswa` TO `participants`');
+            if (Schema::hasColumn('participants', 'id_mahasiswa')) {
+                DB::statement('ALTER TABLE `participants` CHANGE COLUMN `id_mahasiswa` `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('participants', 'nim') || Schema::hasColumn('participants', 'npm')) {
+                $col = Schema::hasColumn('participants', 'npm') ? 'npm' : 'nim';
+                DB::statement("ALTER TABLE `participants` CHANGE COLUMN `{$col}` `identifier` VARCHAR(64) NOT NULL COMMENT 'NPM / NIM peserta apel'");
+            }
+            if (Schema::hasColumn('participants', 'nama')) {
+                DB::statement('ALTER TABLE `participants` CHANGE COLUMN `nama` `name` VARCHAR(255) NOT NULL');
+            }
+            if (Schema::hasColumn('participants', 'kelas')) {
+                DB::statement("ALTER TABLE `participants` CHANGE COLUMN `kelas` `class_group` VARCHAR(50) NULL COMMENT 'Kompi / Pleton / Kelas'");
+            }
+        }
+
+        // Revert pengguna -> users
+        if (Schema::hasTable('pengguna')) {
+            DB::statement('RENAME TABLE `pengguna` TO `users`');
+            if (Schema::hasColumn('users', 'id_pengguna')) {
+                DB::statement('ALTER TABLE `users` CHANGE COLUMN `id_pengguna` `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
+            }
+            if (Schema::hasColumn('users', 'nama')) {
+                DB::statement('ALTER TABLE `users` CHANGE COLUMN `nama` `name` VARCHAR(255) NOT NULL');
+            }
+            if (Schema::hasColumn('users', 'kata_sandi')) {
+                DB::statement('ALTER TABLE `users` CHANGE COLUMN `kata_sandi` `password` VARCHAR(255) NOT NULL');
+            }
+            if (Schema::hasColumn('users', 'foto_profil')) {
+                DB::statement('ALTER TABLE `users` CHANGE COLUMN `foto_profil` `avatar` VARCHAR(255) NULL');
+            }
+            if (Schema::hasColumn('users', 'peran')) {
+                DB::statement("ALTER TABLE `users` CHANGE COLUMN `peran` `role` VARCHAR(20) NOT NULL DEFAULT 'petugas'");
+            }
+            if (Schema::hasColumn('users', 'prodi_binaan')) {
+                DB::statement('ALTER TABLE `users` CHANGE COLUMN `prodi_binaan` `study_program` VARCHAR(150) NULL');
+            }
+        }
     }
 };

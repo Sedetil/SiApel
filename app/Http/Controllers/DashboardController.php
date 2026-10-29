@@ -98,7 +98,7 @@ class DashboardController extends Controller
                 $user->department,
                 $user->study_program,
                 $user->class_group,
-                $user->cohort_year ? 'Angkatan ' . $user->cohort_year : null,
+                $user->cohort_year ? 'Angkatan '.$user->cohort_year : null,
             ]);
             $scopeDescription = count($parts) > 0 ? implode(' • ', $parts) : 'Mahasiswa Binaan Saya';
         }

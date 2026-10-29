@@ -67,7 +67,7 @@
                     <span class="text-[11.5px] font-bold text-slate-700 uppercase tracking-wider">
                         Struktur Akademik Mahasiswa
                     </span>
-                    <a href="{{ route('academic-structures.index') }}" target="_blank" class="text-[11px] text-primary hover:underline">
+                    <a href="{{ route('admin.academic-structures.index') }}" target="_blank" class="text-[11px] text-primary hover:underline">
                         + Kelola Master Struktur
                     </a>
                 </div>

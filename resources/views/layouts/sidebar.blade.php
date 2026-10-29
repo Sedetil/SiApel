@@ -263,7 +263,7 @@
                         <i data-lucide="graduation-cap" class="w-4 h-4 shrink-0 {{ request()->routeIs('participants*') || request()->routeIs('admin.participants*') ? 'text-blue-600' : 'text-slate-400' }}"></i>
                         <span class="sidebar-label truncate">Mahasiswa</span>
                     </a>
-                    <a href="{{ route('officers.index') }}" class="sidebar-nav-link relative flex items-center gap-3 px-3 py-2 rounded-lg text-[12.5px] transition-colors {{ request()->routeIs('officers*') || request()->routeIs('admin.officers*') ? 'bg-blue-50 text-blue-600 font-semibold border border-blue-100' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
+                    <a href="{{ route('admin.officers.index') }}" class="sidebar-nav-link relative flex items-center gap-3 px-3 py-2 rounded-lg text-[12.5px] transition-colors {{ request()->routeIs('officers*') || request()->routeIs('admin.officers*') ? 'bg-blue-50 text-blue-600 font-semibold border border-blue-100' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
                         <i data-lucide="users" class="w-4 h-4 shrink-0 {{ request()->routeIs('officers*') || request()->routeIs('admin.officers*') ? 'text-blue-600' : 'text-slate-400' }}"></i>
                         <span class="sidebar-label truncate">Timdis</span>
                     </a>
@@ -280,7 +280,7 @@
                         <i data-lucide="calendar-plus" class="w-4 h-4 shrink-0 {{ request()->routeIs('schedules*') || request()->routeIs('admin.schedules*') ? 'text-blue-600' : 'text-slate-400' }}"></i>
                         <span class="sidebar-label truncate">Kelola Apel</span>
                     </a>
-                    <a href="{{ route('academic-structures.index') }}" class="sidebar-nav-link relative flex items-center gap-3 px-3 py-2 rounded-lg text-[12.5px] transition-colors {{ request()->routeIs('academic-structures*') || request()->routeIs('admin.academic-structures*') ? 'bg-blue-50 text-blue-600 font-semibold border border-blue-100 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}" title="Struktur Jurusan & Kelas">
+                    <a href="{{ route('admin.academic-structures.index') }}" class="sidebar-nav-link relative flex items-center gap-3 px-3 py-2 rounded-lg text-[12.5px] transition-colors {{ request()->routeIs('academic-structures*') || request()->routeIs('admin.academic-structures*') ? 'bg-blue-50 text-blue-600 font-semibold border border-blue-100 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}" title="Struktur Jurusan & Kelas">
                         <i data-lucide="network" class="w-4 h-4 shrink-0 {{ request()->routeIs('academic-structures*') || request()->routeIs('admin.academic-structures*') ? 'text-blue-600' : 'text-slate-400' }}"></i>
                         <span class="sidebar-label truncate">Struktur & Kelas</span>
                     </a>

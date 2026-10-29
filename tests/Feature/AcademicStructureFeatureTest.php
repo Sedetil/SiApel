@@ -13,7 +13,9 @@ use Tests\TestCase;
 class AcademicStructureFeatureTest extends TestCase
 {
     use RefreshDatabase;
+
     protected User $admin;
+
     protected User $timdis;
 
     protected function setUp(): void
@@ -52,7 +54,7 @@ class AcademicStructureFeatureTest extends TestCase
 
     public function test_timdis_cannot_access_academic_structure_page(): void
     {
-        $response = $this->actingAs($this->timdis)->get(route('academic-structures.index'));
+        $response = $this->actingAs($this->timdis)->get(route('admin.academic-structures.index'));
         $response->assertStatus(403);
     }
 

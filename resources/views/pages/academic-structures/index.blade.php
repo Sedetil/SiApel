@@ -99,7 +99,7 @@
                             <i data-lucide="edit-3" class="w-4 h-4"></i>
                         </button>
 
-                        <form method="POST" action="{{ route('academic-structures.departments.destroy', $dept) }}" onsubmit="return confirm('Hapus Jurusan {{ $dept->name }} beserta seluruh prodi dan kelas di dalamnya?')">
+                        <form method="POST" action="{{ route('admin.academic-structures.departments.destroy', $dept) }}" onsubmit="return confirm('Hapus Jurusan {{ $dept->name }} beserta seluruh prodi dan kelas di dalamnya?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="p-1.5 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors" title="Hapus Jurusan">
@@ -136,7 +136,7 @@
                                         <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                                     </button>
 
-                                    <form method="POST" action="{{ route('academic-structures.study-programs.destroy', $prodi) }}" onsubmit="return confirm('Hapus Program Studi {{ $prodi->name }} beserta kelas di dalamnya?')">
+                                    <form method="POST" action="{{ route('admin.academic-structures.study-programs.destroy', $prodi) }}" onsubmit="return confirm('Hapus Program Studi {{ $prodi->name }} beserta kelas di dalamnya?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="p-1 text-slate-300 hover:text-red-500 transition-colors" title="Hapus Prodi">
@@ -166,7 +166,7 @@
                                                 </button>
 
                                                 <!-- Delete Class Button -->
-                                                <form method="POST" action="{{ route('academic-structures.classes.destroy', $cls) }}" class="inline" onsubmit="return confirm('Hapus kelas {{ $cls->name }}?')">
+                                                <form method="POST" action="{{ route('admin.academic-structures.classes.destroy', $cls) }}" class="inline" onsubmit="return confirm('Hapus kelas {{ $cls->name }}?')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="text-slate-300 hover:text-red-500 opacity-60 group-hover:opacity-100 transition-opacity" title="Hapus Kelas">
@@ -204,7 +204,7 @@
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
-        <form method="POST" action="{{ route('academic-structures.departments.store') }}" class="space-y-4">
+        <form method="POST" action="{{ route('admin.academic-structures.departments.store') }}" class="space-y-4">
             @csrf
             <div>
                 <label for="dept_name" class="block text-[12px] font-bold text-text-primary uppercase tracking-wider mb-1.5">Nama Jurusan <span class="text-error">*</span></label>
@@ -262,7 +262,7 @@
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
-        <form method="POST" action="{{ route('academic-structures.study-programs.store') }}" class="space-y-4">
+        <form method="POST" action="{{ route('admin.academic-structures.study-programs.store') }}" class="space-y-4">
             @csrf
             <input type="hidden" id="prodi_dept_id" name="department_id" value="">
             <div>
@@ -337,7 +337,7 @@
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
-        <form method="POST" action="{{ route('academic-structures.classes.store') }}" class="space-y-4">
+        <form method="POST" action="{{ route('admin.academic-structures.classes.store') }}" class="space-y-4">
             @csrf
             <input type="hidden" id="class_prodi_id" name="study_program_id" value="">
             <div>

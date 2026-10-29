@@ -24,7 +24,7 @@
         <div class="lg:col-span-7 bg-surface border border-border rounded-lg p-6 shadow-sm">
             <h2 class="text-[16px] font-bold text-text-primary mb-4 pb-2 border-b border-border">Informasi Biodata</h2>
 
-            <form method="POST" action="{{ route('participants.update', $participant) }}" class="space-y-4">
+            <form method="POST" action="{{ route('admin.participants.update', $participant) }}" class="space-y-4">
                 @csrf
                 @method('PUT')
 
@@ -170,7 +170,7 @@
                         </div>
 
                         <!-- Unbind Action -->
-                        <form method="POST" action="{{ route('participants.unbind-rfid', $participant) }}" class="mt-4 pt-3 border-t border-blue-200/60" onsubmit="return confirm('Lepas tautan kartu RFID dari peserta ini?')">
+                        <form method="POST" action="{{ route('admin.participants.deactivate-rfid', $participant) }}" class="mt-4 pt-3 border-t border-blue-200/60" onsubmit="return confirm('Lepas tautan kartu RFID dari peserta ini?')">
                             @csrf
                             <button type="submit" class="w-full py-1.5 px-3 bg-white border border-border hover:bg-red-50 hover:text-error hover:border-error/40 text-text-secondary text-[12px] font-medium rounded transition-colors text-center">
                                 Lepas Tautan Kartu
@@ -186,7 +186,7 @@
                 @endif
 
                 <!-- Map New Card Form -->
-                <form method="POST" action="{{ route('participants.map-rfid', $participant) }}" class="space-y-3">
+                <form method="POST" action="{{ route('admin.participants.map-rfid', $participant) }}" class="space-y-3">
                     @csrf
                     <div>
                         <label for="card_uid" class="block text-[12px] font-bold text-text-primary uppercase tracking-wider mb-1">

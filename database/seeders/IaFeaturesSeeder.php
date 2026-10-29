@@ -8,6 +8,7 @@ use App\Models\Participant;
 use App\Models\PermissionRequest;
 use App\Models\SystemSetting;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 class IaFeaturesSeeder extends Seeder
@@ -68,7 +69,7 @@ class IaFeaturesSeeder extends Seeder
             'attachment_path' => null,
             'status' => 'menunggu',
             'notes' => null,
-            'created_at' => \Carbon\Carbon::parse('2026-10-20 16:30:00'),
+            'created_at' => Carbon::parse('2026-10-20 16:30:00'),
         ]);
 
         if ($participants->count() >= 2) {

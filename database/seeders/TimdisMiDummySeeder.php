@@ -68,7 +68,7 @@ class TimdisMiDummySeeder extends Seeder
                 ]
             );
 
-            $cardUid = 'MI_' . strtoupper(Str::random(8));
+            $cardUid = 'MI_'.strtoupper(Str::random(8));
             RfidCard::firstOrCreate(
                 ['participant_id' => $participant->id],
                 [
