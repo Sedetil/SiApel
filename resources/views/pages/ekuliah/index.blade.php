@@ -137,7 +137,7 @@
                                     <span>Tarik Data Mahasiswa & Jadwal</span>
                                 </div>
                                 <p class="text-[11px] text-slate-500 mt-0.5">
-                                    Memperbarui master mahasiswa, kelas kompi, dan jadwal semester dari server E-Kuliah.
+                                    Memperbarui master mahasiswa, kelas, dan jadwal semester dari server E-Kuliah.
                                 </p>
                             </div>
                             <span class="px-2 py-1 bg-white border border-blue-200 text-blue-700 font-bold text-[11px] rounded-md shadow-2xs shrink-0 ml-2">

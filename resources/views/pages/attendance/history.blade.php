@@ -5,9 +5,12 @@
 
     <!-- 2. Judul Halaman -->
     <div>
-        <h1 class="text-[26px] font-bold text-slate-900 tracking-tight">
-            Riwayat Absensi
+        <h1 class="text-[24px] font-bold text-slate-900 tracking-tight leading-tight">
+            {{ auth()->check() && !auth()->user()->isAdmin() ? 'Informasi Absensi' : 'Riwayat Absensi' }}
         </h1>
+        <p class="text-[13px] text-slate-500 mt-1">
+            Pantau dan verifikasi pencatatan kehadiran apel mahasiswa secara berkala.
+        </p>
     </div>
 
     <!-- 3. Empat Kartu Ringkasan / Summary Cards (Grid 1x4) -->

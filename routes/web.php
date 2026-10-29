@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AcademicStructureController;
 use App\Http\Controllers\ApelScheduleController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuditLogController;
@@ -98,6 +99,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/integrasi-ekuliah/sync-data', [EKuliahController::class, 'syncData'])->name('ekuliah.sync-data');
     Route::post('/integrasi-ekuliah/sync-attendance', [EKuliahController::class, 'syncAttendance'])->name('ekuliah.sync-attendance');
 
+    // Struktur Akademik (Jurusan, Program Studi, Kelas & Angkatan)
+    Route::get('/struktur-akademik', [AcademicStructureController::class, 'index'])->name('academic-structures.index');
+    Route::post('/struktur-akademik/department', [AcademicStructureController::class, 'storeDepartment'])->name('academic-structures.departments.store');
+    Route::put('/struktur-akademik/department/{department}', [AcademicStructureController::class, 'updateDepartment'])->name('academic-structures.departments.update');
+    Route::delete('/struktur-akademik/department/{department}', [AcademicStructureController::class, 'destroyDepartment'])->name('academic-structures.departments.destroy');
+    Route::post('/struktur-akademik/study-program', [AcademicStructureController::class, 'storeStudyProgram'])->name('academic-structures.study-programs.store');
+    Route::put('/struktur-akademik/study-program/{studyProgram}', [AcademicStructureController::class, 'updateStudyProgram'])->name('academic-structures.study-programs.update');
+    Route::delete('/struktur-akademik/study-program/{studyProgram}', [AcademicStructureController::class, 'destroyStudyProgram'])->name('academic-structures.study-programs.destroy');
+    Route::post('/struktur-akademik/class', [AcademicStructureController::class, 'storeClass'])->name('academic-structures.classes.store');
+    Route::put('/struktur-akademik/class/{academicClass}', [AcademicStructureController::class, 'updateClass'])->name('academic-structures.classes.update');
+    Route::delete('/struktur-akademik/class/{academicClass}', [AcademicStructureController::class, 'destroyClass'])->name('academic-structures.classes.destroy');
+
     // Audit Trail
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
@@ -135,7 +148,9 @@ Route::prefix('timdis')->name('timdis.')->middleware(['auth', 'role:timdis,petug
     Route::get('/izin-sakit/{permissionRequest}', [PermissionRequestController::class, 'show'])->name('permission-requests.show');
     Route::post('/izin-sakit/{permissionRequest}/decide', [PermissionRequestController::class, 'decide'])->name('permission-requests.decide');
 
-    // 3. DETAIL MAHASISWA (MODE BACA TIMDIS)
+    // 3. MAHASISWA BINAAN TIMDIS
+    Route::get('/mahasiswa', [ParticipantController::class, 'index'])->name('participants');
+    Route::get('/participants', [ParticipantController::class, 'index'])->name('participants.index');
     Route::get('/participants/{participant}', [ParticipantController::class, 'show'])->whereNumber('participant')->name('participants.show');
 
     // 4. AKUN TIMDIS
@@ -143,4 +158,13 @@ Route::prefix('timdis')->name('timdis.')->middleware(['auth', 'role:timdis,petug
     Route::put('/profile', [ProfileController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+});
+
+// Fallback rute lama agar pemanggilan route('dashboard'), route('attendance.history'), dll tetap berjalan
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('attendance.history');
+    Route::get('/permission-requests', [PermissionRequestController::class, 'index'])->name('permission-requests.index');
+    Route::get('/participants', [ParticipantController::class, 'index'])->name('participants.index');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 });

@@ -32,10 +32,12 @@ class Participant extends Model
         'identifier',
         'nama',
         'name',
+        'department',
         'study_program',
         'kelas',
         'class_group',
         'semester',
+        'cohort_year',
         'kode_qr',
         'id_rfid',
         'gender',
@@ -131,6 +133,39 @@ class Participant extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeForUser($query, ?User $user = null)
+    {
+        if (! $user || $user->isAdmin()) {
+            return $query;
+        }
+
+        $classes = $user->assigned_classes;
+
+        // Jika Timdis memiliki penugasan kelas spesifik (bisa lintas prodi/jurusan)
+        if (! empty($classes)) {
+            $query->whereIn('class_group', $classes);
+            return $query;
+        }
+
+        // Jika tidak ada kelas spesifik, gunakan filter tingkatan hierarkis (Prodi / Jurusan)
+        if (! empty($user->study_program)) {
+            $query->where('study_program', $user->study_program);
+        } elseif (! empty($user->department)) {
+            $query->where('department', $user->department);
+        }
+
+        if (! empty($user->cohort_year)) {
+            $cohorts = array_filter(array_map('trim', explode(',', $user->cohort_year)));
+            if (count($cohorts) > 1) {
+                $query->whereIn('cohort_year', $cohorts);
+            } else {
+                $query->where('cohort_year', $user->cohort_year);
+            }
+        }
+
+        return $query;
     }
 
     public function isActive(): bool

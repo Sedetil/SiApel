@@ -1,653 +1,324 @@
 @extends('layouts.app')
 
-@php
-    $breadcrumbCategory = 'Menu Utama';
-    $breadcrumbPage = 'Data Mahasiswa';
-
-    // 10 Baris Mock Data persis seperti pada desain UI
-    $mockStudents = [
-        [
-            'id' => 1,
-            'name' => 'Aditya Pratama',
-            'email' => 'aditya.p@example.com',
-            'npm' => '23753001',
-            'study_program' => 'D3 Manajemen Informatika',
-            'faculty' => 'Ekonomi dan Bisnis',
-            'angkatan' => '2023',
-            'semester' => '5',
-            'status' => 'Aktif',
-        ],
-        [
-            'id' => 2,
-            'name' => 'Aulia Putri Ramadhani',
-            'email' => 'aulia.r@example.com',
-            'npm' => '23753008',
-            'study_program' => 'D3 Manajemen Informatika',
-            'faculty' => 'Ekonomi dan Bisnis',
-            'angkatan' => '2023',
-            'semester' => '5',
-            'status' => 'Aktif',
-        ],
-        [
-            'id' => 3,
-            'name' => 'Bima Arya Saputra',
-            'email' => 'bima.a@example.com',
-            'npm' => '24753012',
-            'study_program' => 'D3 Manajemen Informatika',
-            'faculty' => 'Ekonomi dan Bisnis',
-            'angkatan' => '2024',
-            'semester' => '3',
-            'status' => 'Aktif',
-        ],
-        [
-            'id' => 4,
-            'name' => 'Citra Ayu Lestari',
-            'email' => 'citra.a@example.com',
-            'npm' => '24752005',
-            'study_program' => 'D3 Akuntansi',
-            'faculty' => 'Ekonomi dan Bisnis',
-            'angkatan' => '2024',
-            'semester' => '3',
-            'status' => 'Aktif',
-        ],
-        [
-            'id' => 5,
-            'name' => 'Daffa Rizky Maulana',
-            'email' => 'daffa.r@example.com',
-            'npm' => '23752019',
-            'study_program' => 'D3 Akuntansi',
-            'faculty' => 'Ekonomi dan Bisnis',
-            'angkatan' => '2023',
-            'semester' => '5',
-            'status' => 'Cuti',
-        ],
-        [
-            'id' => 6,
-            'name' => 'Dewi Safitri',
-            'email' => 'dewi.s@example.com',
-            'npm' => '25753006',
-            'study_program' => 'D3 Manajemen Informatika',
-            'faculty' => 'Ekonomi dan Bisnis',
-            'angkatan' => '2025',
-            'semester' => '1',
-            'status' => 'Aktif',
-        ],
-        [
-            'id' => 7,
-            'name' => 'Fajar Nur Hidayat',
-            'email' => 'fajar.n@example.com',
-            'npm' => '24751011',
-            'study_program' => 'D3 Agribisnis',
-            'faculty' => 'Ekonomi dan Bisnis',
-            'angkatan' => '2024',
-            'semester' => '3',
-            'status' => 'Aktif',
-        ],
-        [
-            'id' => 8,
-            'name' => 'Intan Permata Sari',
-            'email' => 'intan.p@example.com',
-            'npm' => '23751024',
-            'study_program' => 'D3 Agribisnis',
-            'faculty' => 'Ekonomi dan Bisnis',
-            'angkatan' => '2023',
-            'semester' => '5',
-            'status' => 'Nonaktif',
-        ],
-        [
-            'id' => 9,
-            'name' => 'Muhammad Farhan',
-            'email' => 'farhan.m@example.com',
-            'npm' => '25752009',
-            'study_program' => 'D3 Akuntansi',
-            'faculty' => 'Ekonomi dan Bisnis',
-            'angkatan' => '2025',
-            'semester' => '1',
-            'status' => 'Aktif',
-        ],
-        [
-            'id' => 10,
-            'name' => 'Nadia Khairunnisa',
-            'email' => 'nadia.k@example.com',
-            'npm' => '24753027',
-            'study_program' => 'D3 Manajemen Informatika',
-            'faculty' => 'Ekonomi dan Bisnis',
-            'angkatan' => '2024',
-            'semester' => '3',
-            'status' => 'Aktif',
-        ],
-    ];
-@endphp
-
 @section('content')
-<div class="space-y-5 max-w-[1240px] mx-auto pb-8">
+<div class="space-y-5">
 
-    <!-- 2. JUDUL HALAMAN & SUB-JUDUL -->
-    <div class="pt-1 pb-1">
-        <h1 class="text-[26px] font-bold text-slate-900 tracking-tight leading-tight">
-            Data Mahasiswa
+    <!-- PAGE TITLE & SUBTITLE -->
+    <div class="page-header">
+        <h1 class="text-[24px] font-bold text-slate-900 tracking-tight leading-tight">
+            {{ auth()->check() && !auth()->user()->isAdmin() ? 'Mahasiswa Saya' : 'Data Mahasiswa' }}
         </h1>
-        <p class="text-[13.5px] text-slate-500 mt-0.5">
-            Kelola identitas mahasiswa dan informasi akademik di SIApel.
+        <p class="text-[13px] text-slate-500 mt-1">
+            {{ auth()->check() && !auth()->user()->isAdmin() 
+                ? 'Menampilkan Daftar Informasi Tentang Mahasiswa Anda' 
+                : 'Menampilkan Daftar Informasi Lengkap Mahasiswa Polinela' }}
         </p>
     </div>
 
-    <!-- 3. CARD UTAMA (KONTAINER TABEL & FILTER) -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03)] p-6 space-y-5">
+    <!-- MAIN CONTAINER CARD -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] overflow-hidden">
         
-        <!-- Bagian Atas Card (Header) -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <!-- Kiri: Ikon Toga, Judul & Badge, Sub-teks -->
+        <!-- CARD HEADER: Icon + Title + Total Badge + Ekspor Button -->
+        <div class="p-5 sm:p-6 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100">
             <div class="flex items-start gap-3.5">
-                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
-                    <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+                <!-- Blue Icon Container -->
+                <div class="w-10 h-10 rounded-xl bg-[#EEF2FF] border border-[#E0E7FF] text-[#2D56FF] flex items-center justify-center shrink-0">
+                    <i data-lucide="graduation-cap" class="w-5 h-5 text-[#2D56FF]"></i>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2.5 flex-wrap">
-                        <h2 class="text-[16px] font-bold text-slate-900 tracking-tight">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h2 class="text-[16px] font-bold text-slate-900 tracking-tight leading-tight">
                             Daftar mahasiswa
                         </h2>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-semibold bg-blue-50 text-blue-600 border border-blue-100">
-                            1.248 mahasiswa
+                        <span class="text-[11.5px] font-bold text-[#2D56FF] bg-[#EEF2FF] px-2.5 py-0.5 rounded-full">
+                            {{ number_format($totalCount ?? $participants->total()) }} mahasiswa
                         </span>
                     </div>
-                    <p class="text-[13px] text-slate-400 font-normal mt-0.5">
-                        Lihat, tambah, dan perbarui data mahasiswa yang terdaftar.
+                    <p class="text-[12.5px] text-slate-400 mt-0.5">
+                        Lihat, dan perbarui data mahasiswa yang terdaftar.
                     </p>
                 </div>
             </div>
 
-            <!-- Kanan: Tombol Ekspor data -->
-            <div class="flex items-center gap-2 self-start sm:self-center">
-                <button 
-                    type="button" 
-                    onclick="handleExportData()"
-                    class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 px-3.5 py-2 rounded-xl text-[13px] font-medium shadow-2xs transition-colors cursor-pointer"
+            <!-- Actions: Ekspor Data & Tambah (Admin) -->
+            <div class="flex items-center gap-2.5 shrink-0">
+                @if(auth()->check() && auth()->user()->isAdmin())
+                    <a href="{{ route('participants.create') }}" class="inline-flex items-center gap-1.5 bg-[#2D56FF] hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors shadow-xs">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        <span>Tambah Mahasiswa</span>
+                    </a>
+                @endif
+
+                <a 
+                    href="{{ route('reports.export-pdf', ['type' => 'mahasiswa']) }}" 
+                    class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors shadow-xs"
                     title="Ekspor Data Mahasiswa"
                 >
-                    <i data-lucide="download" class="w-4 h-4 text-slate-500"></i>
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500"></i>
                     <span>Ekspor data</span>
-                </button>
+                </a>
             </div>
         </div>
 
-        <!-- Baris Pencarian & Filter (Grid/Flex) -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
-            
-            <!-- Input Pencarian (Lebar & Dominan) -->
-            <div class="relative flex-1">
-                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                <input 
-                    type="text" 
-                    id="searchStudentInput" 
-                    oninput="filterStudentTable()"
-                    placeholder="Cari nama atau NPM mahasiswa..." 
-                    class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200/90 rounded-xl text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-colors shadow-2xs"
-                >
-            </div>
-
-            <!-- Dropdown 1: Semua program studi -->
-            <div class="relative min-w-[190px]">
-                <select 
-                    id="filterStudyProgram" 
-                    onchange="filterStudentTable()"
-                    class="w-full appearance-none bg-white border border-slate-200/90 rounded-xl px-3.5 py-2 pr-8 text-[13px] text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 cursor-pointer shadow-2xs"
-                >
-                    <option value="">Semua program studi</option>
-                    <option value="D3 Manajemen Informatika">D3 Manajemen Informatika</option>
-                    <option value="D3 Akuntansi">D3 Akuntansi</option>
-                    <option value="D3 Agribisnis">D3 Agribisnis</option>
-                </select>
-                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-            </div>
-
-            <!-- Dropdown 2: Semua angkatan -->
-            <div class="relative min-w-[150px]">
-                <select 
-                    id="filterAngkatan" 
-                    onchange="filterStudentTable()"
-                    class="w-full appearance-none bg-white border border-slate-200/90 rounded-xl px-3.5 py-2 pr-8 text-[13px] text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 cursor-pointer shadow-2xs"
-                >
-                    <option value="">Semua angkatan</option>
-                    <option value="2025">2025</option>
-                    <option value="2024">2024</option>
-                    <option value="2023">2023</option>
-                </select>
-                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-            </div>
-
-            <!-- Dropdown 3: Semua status -->
-            <div class="relative min-w-[135px]">
-                <select 
-                    id="filterStatus" 
-                    onchange="filterStudentTable()"
-                    class="w-full appearance-none bg-white border border-slate-200/90 rounded-xl px-3.5 py-2 pr-8 text-[13px] text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 cursor-pointer shadow-2xs"
-                >
-                    <option value="">Semua status</option>
-                    <option value="Aktif">Aktif</option>
-                    <option value="Cuti">Cuti</option>
-                    <option value="Nonaktif">Nonaktif</option>
-                </select>
-                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-            </div>
-
-        </div>
-
-        <!-- 4. TABEL DATA MAHASISWA -->
-        <div class="border border-slate-100 rounded-xl overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[840px]">
+        <!-- SEARCH & DROPDOWN FILTERS ROW -->
+        <div class="p-5 sm:p-6 pt-4 pb-4">
+            <form method="GET" action="{{ auth()->check() && !auth()->user()->isAdmin() ? route('timdis.participants') : route('participants.index') }}" id="filter-form" class="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-3">
                 
-                <!-- Header Tabel -->
-                <thead class="bg-white border-b border-slate-100 text-[12px] font-medium text-slate-400 select-none">
-                    <tr>
-                        <th class="w-11 py-3 px-3 text-center">
-                            <input 
-                                type="checkbox" 
-                                id="selectAllCheckbox" 
-                                onchange="toggleSelectAll(this)"
-                                class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer transition-colors"
-                            >
-                        </th>
-                        <th class="py-3 px-4 font-medium text-slate-400">Mahasiswa</th>
-                        <th class="py-3 px-4 font-medium text-slate-400">NPM</th>
-                        <th class="py-3 px-4 font-medium text-slate-400">Program studi</th>
-                        <th class="py-3 px-4 font-medium text-slate-400">Angkatan</th>
-                        <th class="py-3 px-4 font-medium text-slate-400">Semester</th>
-                        <th class="py-3 px-4 font-medium text-slate-400">Status</th>
-                        <th class="py-3 px-4 font-medium text-slate-400 text-center">Aksi</th>
-                    </tr>
-                </thead>
-
-                <!-- Body Tabel (10 Baris Mock Data) -->
-                <tbody id="studentTableBody" class="divide-y divide-slate-100/90 text-[13px]">
-                    @foreach($mockStudents as $student)
-                        <tr 
-                            class="student-row hover:bg-slate-50/70 transition-colors group"
-                            data-name="{{ strtolower($student['name']) }}"
-                            data-npm="{{ $student['npm'] }}"
-                            data-program="{{ $student['study_program'] }}"
-                            data-angkatan="{{ $student['angkatan'] }}"
-                            data-status="{{ $student['status'] }}"
-                        >
-                            <!-- Kolom Checkbox -->
-                            <td class="py-3.5 px-3 text-center">
-                                <input 
-                                    type="checkbox" 
-                                    class="student-checkbox w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer transition-colors"
-                                >
-                            </td>
-
-                            <!-- Kolom Mahasiswa: Nama & Email -->
-                            <td class="py-3.5 px-4 min-w-[200px]">
-                                <div class="font-bold text-[13.5px] text-slate-900 leading-snug group-hover:text-blue-600 transition-colors">
-                                    {{ $student['name'] }}
-                                </div>
-                                <div class="text-[12px] text-slate-400 font-normal mt-0.5">
-                                    {{ $student['email'] }}
-                                </div>
-                            </td>
-
-                            <!-- Kolom NPM -->
-                            <td class="py-3.5 px-4 text-[13px] text-slate-700 font-medium">
-                                {{ $student['npm'] }}
-                            </td>
-
-                            <!-- Kolom Program Studi: Nama Prodi & Fakultas -->
-                            <td class="py-3.5 px-4 min-w-[210px]">
-                                <div class="font-bold text-[13.5px] text-slate-900 leading-snug">
-                                    {{ $student['study_program'] }}
-                                </div>
-                                <div class="text-[12px] text-slate-400 font-normal mt-0.5">
-                                    {{ $student['faculty'] }}
-                                </div>
-                            </td>
-
-                            <!-- Kolom Angkatan -->
-                            <td class="py-3.5 px-4 text-[13px] text-slate-700 font-medium">
-                                {{ $student['angkatan'] }}
-                            </td>
-
-                            <!-- Kolom Semester -->
-                            <td class="py-3.5 px-4 text-[13px] text-slate-700 font-medium">
-                                {{ $student['semester'] }}
-                            </td>
-
-                            <!-- Kolom Status: Pill dengan Dot Sesuai Varian -->
-                            <td class="py-3.5 px-4 whitespace-nowrap">
-                                @if($student['status'] === 'Aktif')
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200/60">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0"></span>
-                                        <span>Aktif</span>
-                                    </span>
-                                @elseif($student['status'] === 'Cuti')
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-amber-50 text-amber-600 border border-amber-200/60">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block shrink-0"></span>
-                                        <span>Cuti</span>
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-slate-100 text-slate-600 border border-slate-200/60">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block shrink-0"></span>
-                                        <span>Nonaktif</span>
-                                    </span>
-                                @endif
-                            </td>
-
-                            <!-- Kolom Aksi: Tombol Kotak Ber-border dengan Ikon Mata -->
-                            <td class="py-3.5 px-4 text-center">
-                                <button 
-                                    type="button" 
-                                    onclick="openStudentDetail({{ json_encode($student) }})"
-                                    class="w-8 h-8 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors shadow-2xs cursor-pointer mx-auto"
-                                    title="Lihat detail {{ $student['name'] }}"
-                                >
-                                    <i data-lucide="eye" class="w-4 h-4"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-
-            <!-- State Kosong Jika Filter Tidak Menemukan Hasil -->
-            <div id="noResultsState" class="hidden p-10 text-center text-slate-400 text-[13px]">
-                <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-300 mb-2"></i>
-                <p class="font-bold text-slate-700 text-[14px]">Data tidak ditemukan</p>
-                <p class="text-[12px] text-slate-400 mt-0.5">Tidak ada mahasiswa yang sesuai dengan filter pencarian.</p>
-            </div>
-        </div>
-
-        <!-- 5. FOOTER CARD: INFO JUMLAH, DROPDOWN PER HALAMAN & PAGINATION -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-            
-            <!-- Kiri: Menampilkan Data & Dropdown Halaman -->
-            <div class="flex items-center gap-3 text-[13px] text-slate-500">
-                <span class="font-normal">
-                    Menampilkan <span id="visibleRangeText">1–10</span> dari 1.248 data
-                </span>
-                
+                <!-- Search Input -->
                 <div class="relative">
-                    <select class="appearance-none bg-white border border-slate-200/90 rounded-xl px-3 py-1.5 pr-7 text-[12.5px] font-medium text-slate-700 shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-600/20 cursor-pointer">
-                        <option value="10">10 / halaman</option>
-                        <option value="25">25 / halaman</option>
-                        <option value="50">50 / halaman</option>
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none"></i>
+                    <input 
+                        type="text" 
+                        name="search" 
+                        value="{{ request('search') }}" 
+                        placeholder="Cari nama atau NPM mahasiswa..."
+                        onchange="document.getElementById('filter-form').submit()"
+                        class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 text-slate-800 text-xs rounded-xl focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-slate-400 transition-colors"
+                    >
+                </div>
+
+                <!-- Program Studi Dropdown -->
+                <div class="relative">
+                    <select 
+                        name="study_program" 
+                        onchange="document.getElementById('filter-form').submit()"
+                        class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-xl px-3.5 py-2.5 pr-8 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary hover:bg-slate-50 transition-colors font-medium truncate"
+                    >
+                        <option value="">Semua program studi</option>
+                        @foreach($studyPrograms as $sp)
+                            <option value="{{ $sp }}" {{ request('study_program') === $sp ? 'selected' : '' }}>
+                                {{ $sp }}
+                            </option>
+                        @endforeach
                     </select>
-                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3.5 pointer-events-none"></i>
                 </div>
-            </div>
 
-            <!-- Kanan: Kontrol Pagination -->
-            <div class="flex items-center gap-1 select-none">
-                <!-- Prev Button -->
-                <button 
-                    type="button" 
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-slate-600 cursor-pointer transition-colors"
-                    title="Halaman Sebelumnya"
-                >
-                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                </button>
+                <!-- Angkatan Dropdown -->
+                <div class="relative">
+                    <select 
+                        name="cohort_year" 
+                        onchange="document.getElementById('filter-form').submit()"
+                        class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-xl px-3.5 py-2.5 pr-8 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary hover:bg-slate-50 transition-colors font-medium truncate"
+                    >
+                        <option value="">Semua angkatan</option>
+                        @foreach($cohortYears as $cy)
+                            <option value="{{ $cy }}" {{ request('cohort_year') == $cy ? 'selected' : '' }}>
+                                {{ $cy }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3.5 pointer-events-none"></i>
+                </div>
 
-                <!-- Page 1 (Aktif Solid Biru) -->
-                <span class="w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-[13px] flex items-center justify-center shadow-xs">
-                    1
-                </span>
+                <!-- Status Dropdown -->
+                <div class="relative">
+                    <select 
+                        name="status" 
+                        onchange="document.getElementById('filter-form').submit()"
+                        class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-xl px-3.5 py-2.5 pr-8 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary hover:bg-slate-50 transition-colors font-medium truncate"
+                    >
+                        <option value="">Semua status</option>
+                        <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
+                        <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Nonaktif</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3.5 pointer-events-none"></i>
+                </div>
 
-                <!-- Page 2 -->
-                <button 
-                    type="button" 
-                    class="w-8 h-8 rounded-lg text-slate-600 hover:bg-slate-100 font-medium text-[13px] flex items-center justify-center transition-colors cursor-pointer"
-                >
-                    2
-                </button>
+                @if(isset($classes) && count($classes) > 1)
+                    <!-- Kelas Dropdown -->
+                    <div class="relative">
+                        <select 
+                            name="class_group" 
+                            onchange="document.getElementById('filter-form').submit()"
+                            class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-xl px-3.5 py-2.5 pr-8 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary hover:bg-slate-50 transition-colors font-medium truncate"
+                        >
+                            <option value="">Semua kelas</option>
+                            @foreach($classes as $cg)
+                                <option value="{{ $cg }}" {{ request('class_group') === $cg ? 'selected' : '' }}>
+                                    {{ $cg }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3.5 pointer-events-none"></i>
+                    </div>
+                @endif
 
-                <!-- Page 3 -->
-                <button 
-                    type="button" 
-                    class="w-8 h-8 rounded-lg text-slate-600 hover:bg-slate-100 font-medium text-[13px] flex items-center justify-center transition-colors cursor-pointer"
-                >
-                    3
-                </button>
+                @if(request()->hasAny(['search', 'study_program', 'cohort_year', 'class_group', 'status']))
+                    <div class="md:col-span-4 flex justify-end">
+                        <a href="{{ auth()->check() && !auth()->user()->isAdmin() ? route('timdis.participants') : route('participants.index') }}" class="text-[11.5px] text-[#2D56FF] hover:underline font-semibold flex items-center gap-1">
+                            <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+                            <span>Reset filter</span>
+                        </a>
+                    </div>
+                @endif
 
-                <!-- Ellipsis -->
-                <span class="w-8 h-8 text-slate-400 font-medium text-[13px] flex items-center justify-center">
-                    ..
-                </span>
-
-                <!-- Page 125 -->
-                <button 
-                    type="button" 
-                    class="w-8 h-8 rounded-lg text-slate-600 hover:bg-slate-100 font-medium text-[13px] flex items-center justify-center transition-colors cursor-pointer"
-                >
-                    125
-                </button>
-
-                <!-- Next Button -->
-                <button 
-                    type="button" 
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 cursor-pointer transition-colors"
-                    title="Halaman Berikutnya"
-                >
-                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                </button>
-            </div>
-
+            </form>
         </div>
 
-    </div>
+        <!-- TABLE SECTION -->
+        <div class="overflow-x-auto border-t border-slate-100">
+            @if($participants->isEmpty())
+                <div class="p-12 text-center text-slate-400 text-xs">
+                    <p class="font-bold text-slate-700 text-sm">Tidak Ada Data Mahasiswa</p>
+                    <p class="text-xs text-slate-400 mt-1">Tidak ditemukan data mahasiswa yang sesuai dengan filter pencarian Anda.</p>
+                </div>
+            @else
+                <table class="w-full text-left text-[12.5px]">
+                    <thead class="bg-white border-b border-slate-200/80 text-[11px] font-semibold text-slate-500">
+                        <tr>
+                            <th class="py-3 px-4 w-10 text-center">
+                                <input type="checkbox" id="select-all" class="rounded border-slate-300 text-primary focus:ring-primary/20 cursor-pointer">
+                            </th>
+                            <th class="py-3 px-4">Mahasiswa</th>
+                            <th class="py-3 px-4">NPM</th>
+                            <th class="py-3 px-4">Program studi</th>
+                            <th class="py-3 px-4">Angkatan</th>
+                            <th class="py-3 px-4">Semester</th>
+                            <th class="py-3 px-4">Status</th>
+                            <th class="py-3 px-4 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach($participants as $p)
+                            @php
+                                // Perhitungan estimasi semester berdasarkan angkatan
+                                $currentYear = (int) now()->format('Y');
+                                $currentMonth = (int) now()->format('m');
+                                $cohort = (int) ($p->cohort_year ?? $currentYear);
+                                $diffYears = max(0, $currentYear - $cohort);
+                                $sem = ($diffYears * 2) + ($currentMonth >= 8 ? 1 : 2);
+                                $sem = max(1, min(8, $sem));
+                            @endphp
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <!-- Checkbox -->
+                                <td class="py-3 px-4 text-center">
+                                    <input type="checkbox" class="participant-checkbox rounded border-slate-300 text-primary focus:ring-primary/20 cursor-pointer">
+                                </td>
 
-    <!-- DISCLAIMER / CATATAN INFORMASI DI BAWAH CARD -->
-    <div class="flex items-center gap-2 text-[12.5px] text-slate-400 px-1 pt-1">
-        <i data-lucide="info" class="w-4 h-4 text-slate-400 shrink-0"></i>
-        <span>Data pada halaman ini adalah contoh, bukan data institusi terverifikasi.</span>
-    </div>
+                                <!-- Mahasiswa (Nama & Email/Info) -->
+                                <td class="py-3 px-4">
+                                    <div class="font-bold text-slate-900 leading-tight">
+                                        {{ $p->name }}
+                                    </div>
+                                    <div class="text-[11px] text-slate-400 mt-0.5">
+                                        {{ strtolower(str_replace(' ', '.', $p->name)) }}@example.com
+                                    </div>
+                                </td>
 
-</div>
+                                <!-- NPM -->
+                                <td class="py-3 px-4 font-mono font-medium text-slate-700">
+                                    {{ $p->identifier }}
+                                </td>
 
-<!-- INTERACTIVE STUDENT DETAIL MODAL -->
-<div id="studentDetailModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200/90 overflow-hidden transform transition-all my-8 animate-in fade-in zoom-in-95 duration-150">
-        
-        <!-- Modal Top Header -->
-        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
-            <h3 class="text-[16px] font-bold text-slate-900 leading-tight">Detail Mahasiswa</h3>
-            <button type="button" onclick="closeStudentModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
-                <i data-lucide="x" class="w-4 h-4"></i>
-            </button>
+                                <!-- Program Studi & Jurusan -->
+                                <td class="py-3 px-4">
+                                    <div class="font-semibold text-slate-800 leading-tight">
+                                        {{ $p->study_program ?? '-' }}
+                                    </div>
+                                    <div class="text-[11px] text-slate-400 mt-0.5">
+                                        {{ $p->department ?? 'Ekonomi dan Bisnis' }}
+                                    </div>
+                                </td>
+
+                                <!-- Angkatan -->
+                                <td class="py-3 px-4 font-medium text-slate-700">
+                                    {{ $p->cohort_year ?? '-' }}
+                                </td>
+
+                                <!-- Semester -->
+                                <td class="py-3 px-4 font-medium text-slate-700">
+                                    {{ $sem }}
+                                </td>
+
+                                <!-- Status Badge -->
+                                <td class="py-3 px-4">
+                                    @if($p->isActive())
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#E6F8EF] text-[#22C55E]">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span>
+                                            Aktif
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                            Nonaktif
+                                        </span>
+                                    @endif
+                                </td>
+
+                                <!-- Aksi Buttons (Hanya Lihat Detail) -->
+                                <td class="py-3 px-4">
+                                    <div class="flex items-center justify-center">
+                                        <!-- Lihat / Detail -->
+                                        <a 
+                                            href="{{ route('participants.show', $p) }}" 
+                                            class="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-primary hover:border-primary/40 hover:bg-blue-50 flex items-center justify-center transition-colors shadow-2xs" 
+                                            title="Lihat Detail Mahasiswa"
+                                        >
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
         </div>
 
-        <!-- Modal Body Content -->
-        <div class="p-6 space-y-5 text-[13px]">
+        <!-- FOOTER: Menampilkan 1-10 dari X data, per halaman select, dan pagination -->
+        <div class="p-4 sm:p-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white">
             
-            <!-- Identitas Mahasiswa -->
-            <div class="flex items-center gap-3.5 pt-1">
-                <div id="modalStudentAvatar" class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 font-bold text-[15px] flex items-center justify-center shrink-0 shadow-xs">
-                    AP
-                </div>
-                <div>
-                    <h4 id="modalStudentName" class="text-[16px] font-bold text-slate-900 leading-snug">
-                        Aditya Pratama
-                    </h4>
-                    <p id="modalStudentEmail" class="text-[12.5px] text-slate-400 font-normal">
-                        aditya.p@example.com
-                    </p>
+            <!-- Left: Info & Per Page Dropdown -->
+            <div class="flex items-center gap-3 text-xs text-slate-500">
+                <span>
+                    Menampilkan {{ $participants->firstItem() ?? 0 }}–{{ $participants->lastItem() ?? 0 }} dari {{ number_format($participants->total()) }} data
+                </span>
+
+                <div class="relative inline-block">
+                    <form method="GET" action="{{ auth()->check() && !auth()->user()->isAdmin() ? route('timdis.participants') : route('participants.index') }}" id="per-page-form">
+                        @foreach(request()->except(['per_page', 'page']) as $k => $v)
+                            <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                        @endforeach
+                        <select 
+                            name="per_page" 
+                            onchange="document.getElementById('per-page-form').submit()"
+                            class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-2.5 py-1.5 pr-7 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                        >
+                            <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10 / halaman</option>
+                            <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25 / halaman</option>
+                            <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50 / halaman</option>
+                            <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100 / halaman</option>
+                        </select>
+                    </form>
+                    <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none"></i>
                 </div>
             </div>
 
-            <!-- Detail Grid Info Akademik -->
-            <div class="border border-slate-200/90 rounded-xl p-4 bg-slate-50/50 space-y-3.5 text-[13px]">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <span class="block text-[11.5px] text-slate-400 font-medium">Nomor Pokok Mahasiswa (NPM)</span>
-                        <span id="modalStudentNPM" class="block text-[14px] font-bold text-slate-900 mt-0.5">23753001</span>
-                    </div>
-                    <div>
-                        <span class="block text-[11.5px] text-slate-400 font-medium">Status Keaktifan</span>
-                        <div id="modalStudentStatusContainer" class="mt-0.5">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200/60">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                <span id="modalStudentStatusText">Aktif</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border-t border-slate-200/70 pt-3">
-                    <span class="block text-[11.5px] text-slate-400 font-medium">Program Studi & Fakultas</span>
-                    <span id="modalStudentProdi" class="block text-[13.5px] font-bold text-slate-900 mt-0.5">D3 Manajemen Informatika</span>
-                    <span id="modalStudentFaculty" class="block text-[12px] text-slate-500 font-normal mt-0.2">Ekonomi dan Bisnis</span>
-                </div>
-
-                <div class="border-t border-slate-200/70 pt-3 grid grid-cols-2 gap-4">
-                    <div>
-                        <span class="block text-[11.5px] text-slate-400 font-medium">Angkatan</span>
-                        <span id="modalStudentAngkatan" class="block text-[13.5px] font-semibold text-slate-900 mt-0.5">2023</span>
-                    </div>
-                    <div>
-                        <span class="block text-[11.5px] text-slate-400 font-medium">Semester Berjalan</span>
-                        <span id="modalStudentSemester" class="block text-[13.5px] font-semibold text-slate-900 mt-0.5">Semester 5</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tombol Tutup -->
-            <div class="pt-1 flex justify-end">
-                <button 
-                    type="button" 
-                    onclick="closeStudentModal()"
-                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[13px] rounded-xl transition-colors cursor-pointer"
-                >
-                    Tutup
-                </button>
+            <!-- Right: Custom Styled Pagination Links -->
+            <div>
+                {{ $participants->links('pagination::tailwind') }}
             </div>
 
         </div>
 
     </div>
+
 </div>
 
+<!-- Select All Checkbox Script -->
 @push('scripts')
 <script>
-    // 1. Checkbox Select All Toggle
-    function toggleSelectAll(masterCheckbox) {
-        const checkboxes = document.querySelectorAll('.student-checkbox');
-        checkboxes.forEach(cb => {
-            cb.checked = masterCheckbox.checked;
-        });
-    }
-
-    // Update master checkbox jika ada child checkbox yang diklik manual
     document.addEventListener('DOMContentLoaded', function() {
-        const childCheckboxes = document.querySelectorAll('.student-checkbox');
-        const master = document.getElementById('selectAllCheckbox');
-        
-        childCheckboxes.forEach(cb => {
-            cb.addEventListener('change', function() {
-                const total = childCheckboxes.length;
-                const checked = document.querySelectorAll('.student-checkbox:checked').length;
-                if (master) {
-                    master.checked = total > 0 && total === checked;
-                    master.indeterminate = checked > 0 && checked < total;
-                }
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.participant-checkbox');
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(cb => cb.checked = selectAll.checked);
             });
-        });
+        }
     });
-
-    // 2. Real-time Client-Side Filtering
-    function filterStudentTable() {
-        const searchVal = document.getElementById('searchStudentInput').value.toLowerCase().trim();
-        const prodiVal = document.getElementById('filterStudyProgram').value;
-        const angkatanVal = document.getElementById('filterAngkatan').value;
-        const statusVal = document.getElementById('filterStatus').value;
-
-        const rows = document.querySelectorAll('.student-row');
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-            const name = row.getAttribute('data-name') || '';
-            const npm = row.getAttribute('data-npm') || '';
-            const program = row.getAttribute('data-program') || '';
-            const angkatan = row.getAttribute('data-angkatan') || '';
-            const status = row.getAttribute('data-status') || '';
-
-            const matchesSearch = !searchVal || name.includes(searchVal) || npm.includes(searchVal);
-            const matchesProdi = !prodiVal || program === prodiVal;
-            const matchesAngkatan = !angkatanVal || angkatan === angkatanVal;
-            const matchesStatus = !statusVal || status === statusVal;
-
-            if (matchesSearch && matchesProdi && matchesAngkatan && matchesStatus) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
-        });
-
-        const noResults = document.getElementById('noResultsState');
-        const rangeText = document.getElementById('visibleRangeText');
-
-        if (visibleCount === 0) {
-            noResults.classList.remove('hidden');
-            if (rangeText) rangeText.textContent = '0–0';
-        } else {
-            noResults.classList.add('hidden');
-            if (rangeText) rangeText.textContent = `1–${visibleCount}`;
-        }
-    }
-
-    // 3. Student Detail Modal View
-    function openStudentDetail(student) {
-        if (!student) return;
-
-        const name = student.name || 'Mahasiswa';
-        const nameParts = name.trim().split(' ');
-        let initials = (nameParts[0] ? nameParts[0][0] : 'M') + (nameParts[1] ? nameParts[1][0] : '');
-        initials = initials.toUpperCase();
-
-        document.getElementById('modalStudentAvatar').textContent = initials;
-        document.getElementById('modalStudentName').textContent = name;
-        document.getElementById('modalStudentEmail').textContent = student.email || '-';
-        document.getElementById('modalStudentNPM').textContent = student.npm || '-';
-        document.getElementById('modalStudentProdi').textContent = student.study_program || '-';
-        document.getElementById('modalStudentFaculty').textContent = student.faculty || '-';
-        document.getElementById('modalStudentAngkatan').textContent = student.angkatan || '-';
-        document.getElementById('modalStudentSemester').textContent = 'Semester ' + (student.semester || '1');
-
-        const statusContainer = document.getElementById('modalStudentStatusContainer');
-        const status = student.status || 'Aktif';
-
-        if (status === 'Aktif') {
-            statusContainer.innerHTML = `
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200/60">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0"></span>
-                    <span>Aktif</span>
-                </span>`;
-        } else if (status === 'Cuti') {
-            statusContainer.innerHTML = `
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-amber-50 text-amber-600 border border-amber-200/60">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block shrink-0"></span>
-                    <span>Cuti</span>
-                </span>`;
-        } else {
-            statusContainer.innerHTML = `
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-slate-100 text-slate-600 border border-slate-200/60">
-                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block shrink-0"></span>
-                    <span>Nonaktif</span>
-                </span>`;
-        }
-
-        document.getElementById('studentDetailModal').classList.remove('hidden');
-        if (window.lucide) {
-            window.lucide.createIcons();
-        }
-    }
-
-    function closeStudentModal() {
-        document.getElementById('studentDetailModal').classList.add('hidden');
-    }
-
-    // 4. Ekspor Data Handler
-    function handleExportData() {
-        window.location.href = "{{ route('admin.reports.export-csv') }}";
-    }
 </script>
 @endpush
 @endsection

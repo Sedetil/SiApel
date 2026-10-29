@@ -70,4 +70,15 @@ class AttendanceEvent extends Model
     {
         return $this->belongsTo(Participant::class, 'id_mahasiswa');
     }
+
+    public function scopeForUser($query, ?User $user = null)
+    {
+        if (! $user || $user->isAdmin()) {
+            return $query;
+        }
+
+        return $query->whereHas('participant', function ($q) use ($user) {
+            $q->forUser($user);
+        });
+    }
 }

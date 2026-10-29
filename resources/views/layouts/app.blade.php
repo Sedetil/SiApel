@@ -15,6 +15,15 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Immediate Sidebar State Restore (Prevents Layout Shift) -->
+    <script>
+        try {
+            if (localStorage.getItem('sidebar-collapsed') === 'true' && window.innerWidth >= 1024) {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        } catch(e) {}
+    </script>
+
     <!-- Vite Assets (Tailwind CSS v4 & JS) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -36,12 +45,34 @@
             color: var(--text-dark);
         }
 
-        /* Sidebar Transition & Collapsed Icon-Only Mode */
+        /* Premium Smooth Spring Easing for Sidebar Transition */
         #app-sidebar {
-            transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 0.45s cubic-bezier(0.25, 1, 0.35, 1), transform 0.45s cubic-bezier(0.25, 1, 0.35, 1);
+            will-change: width, transform;
         }
         #main-wrapper {
-            transition: padding-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: padding-left 0.45s cubic-bezier(0.25, 1, 0.35, 1);
+            will-change: padding-left;
+        }
+
+        /* Smooth internal content transitions */
+        #app-sidebar .sidebar-label,
+        #app-sidebar .sidebar-section-header,
+        #app-sidebar .sidebar-footer-text,
+        #app-sidebar .sidebar-footer-status,
+        #app-sidebar .sidebar-badge {
+            transition: opacity 0.28s cubic-bezier(0.25, 1, 0.35, 1), transform 0.28s cubic-bezier(0.25, 1, 0.35, 1);
+        }
+
+        #app-sidebar .sidebar-nav-link,
+        #app-sidebar .sidebar-user-card,
+        #app-sidebar #sidebar-logo,
+        #app-sidebar .sidebar-footer-content {
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.35, 1);
+        }
+
+        #app-sidebar .sidebar-section-divider {
+            transition: opacity 0.3s ease, width 0.4s cubic-bezier(0.25, 1, 0.35, 1), margin 0.4s cubic-bezier(0.25, 1, 0.35, 1);
         }
 
         @media (min-width: 1024px) {
@@ -64,16 +95,31 @@
             html.sidebar-collapsed #app-sidebar .sidebar-label,
             #app-sidebar.sidebar-collapsed .sidebar-label {
                 display: none !important;
+                opacity: 0;
             }
 
             html.sidebar-collapsed #app-sidebar .sidebar-section-header,
             #app-sidebar.sidebar-collapsed .sidebar-section-header {
                 display: none !important;
+                opacity: 0;
+            }
+
+            /* Divider hanya tampil saat sidebar collapsed */
+            .sidebar-section-divider {
+                display: none;
+                opacity: 0;
             }
 
             html.sidebar-collapsed #app-sidebar .sidebar-section-divider,
             #app-sidebar.sidebar-collapsed .sidebar-section-divider {
                 display: block !important;
+                opacity: 1;
+                border-top: 1.5px solid #CBD5E1 !important;
+                width: 38px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                margin-top: 1rem !important;
+                margin-bottom: 1rem !important;
             }
 
             html.sidebar-collapsed #app-sidebar .sidebar-nav-link,
@@ -116,7 +162,9 @@
             }
 
             html.sidebar-collapsed #app-sidebar .sidebar-user-card .w-7,
-            #app-sidebar.sidebar-collapsed .sidebar-user-card .w-7 {
+            html.sidebar-collapsed #app-sidebar .sidebar-user-card .w-8,
+            #app-sidebar.sidebar-collapsed .sidebar-user-card .w-7,
+            #app-sidebar.sidebar-collapsed .sidebar-user-card .w-8 {
                 width: 28px !important;
                 height: 28px !important;
                 margin: 0 auto !important;
@@ -146,8 +194,11 @@
             }
 
             html.sidebar-collapsed #app-sidebar .sidebar-footer-text,
-            #app-sidebar.sidebar-collapsed .sidebar-footer-text {
+            #app-sidebar.sidebar-collapsed .sidebar-footer-text,
+            html.sidebar-collapsed #app-sidebar .sidebar-footer-status,
+            #app-sidebar.sidebar-collapsed .sidebar-footer-status {
                 display: none !important;
+                opacity: 0;
             }
 
             html.sidebar-collapsed #app-sidebar .sidebar-footer-content,
@@ -235,13 +286,13 @@
     @include('layouts.sidebar')
 
     <!-- MAIN WRAPPER -->
-    <div id="main-wrapper" class="lg:pl-60 flex-1 flex flex-col min-h-screen w-full min-w-0 transition-all duration-200">
+    <div id="main-wrapper" class="lg:pl-64 flex-1 flex flex-col min-h-screen w-full min-w-0 transition-all duration-200">
         
         <!-- TOPBAR NAVIGATION COMPONENT -->
         @include('layouts.topbar')
 
         <!-- MAIN CONTAINER -->
-        <main class="flex-1 px-4 sm:px-7 py-6 max-w-[1360px] w-full mx-auto">
+        <main class="flex-1 px-4 sm:px-6 lg:px-8 py-5 max-w-[1400px] w-full mx-auto">
             
             <!-- Feedback Flash Messages -->
             @if (session('success'))
@@ -294,7 +345,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('app-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            const sliderToggleBtn = document.getElementById('sidebar-slider-toggle');
             const mainWrapper = document.getElementById('main-wrapper');
 
             function toggleSidebar() {
@@ -323,8 +374,8 @@
                 }
             }
 
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', toggleSidebar);
+            if (sliderToggleBtn) {
+                sliderToggleBtn.addEventListener('click', toggleSidebar);
             }
 
             if (overlay) {

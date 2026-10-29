@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ApelSchedule;
 use App\Models\AuditLog;
+use App\Models\Department;
 use App\Models\Participant;
 use App\Models\RfidCard;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +17,13 @@ class ParticipantController extends Controller
 {
     public function index(Request $request): View
     {
+        $user = auth()->user();
         $query = Participant::with('activeRfidCard');
+
+        // Scope Penugasan Timdis dari E-Kuliah (Jurusan, Prodi, Kelas, Angkatan)
+        if ($user && ! $user->isAdmin()) {
+            $query->forUser($user);
+        }
 
         if ($request->filled('search')) {
             $search = trim($request->input('search'));
@@ -33,19 +40,52 @@ class ParticipantController extends Controller
             $query->where('study_program', $request->input('study_program'));
         }
 
+        if ($request->filled('cohort_year')) {
+            $query->where('cohort_year', $request->input('cohort_year'));
+        }
+
+        if ($request->filled('class_group')) {
+            $query->where('class_group', $request->input('class_group'));
+        }
+
         if ($request->filled('status')) {
             $statusVal = $request->input('status') === 'active' ? 1 : 0;
             $query->where('is_active', $statusVal);
         }
 
-        $participants = $query->orderBy('name', 'asc')->paginate(15)->withQueryString();
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100])) {
+            $perPage = 10;
+        }
 
-        $studyPrograms = Participant::select('study_program')
-            ->whereNotNull('study_program')
-            ->distinct()
-            ->pluck('study_program');
+        $participants = $query->orderBy('name', 'asc')->paginate($perPage)->withQueryString();
 
-        return view('pages.participants.index', compact('participants', 'studyPrograms'));
+        $studyProgramsQuery = Participant::select('study_program')->whereNotNull('study_program');
+        if ($user && ! $user->isAdmin() && ! empty($user->department)) {
+            $studyProgramsQuery->where('department', $user->department);
+        }
+        $studyPrograms = $studyProgramsQuery->distinct()->pluck('study_program');
+
+        $cohortYearsQuery = Participant::select('cohort_year')->whereNotNull('cohort_year');
+        if ($user && ! $user->isAdmin() && ! empty($user->department)) {
+            $cohortYearsQuery->where('department', $user->department);
+        }
+        $cohortYears = $cohortYearsQuery->distinct()->orderBy('cohort_year', 'desc')->pluck('cohort_year');
+
+        $classesQuery = Participant::select('class_group')->whereNotNull('class_group')->distinct();
+        if ($user && ! $user->isAdmin()) {
+            $assigned = $user->assigned_classes;
+            if (! empty($assigned)) {
+                $classesQuery->whereIn('class_group', $assigned);
+            } elseif (! empty($user->class_group)) {
+                $classesQuery->where('class_group', $user->class_group);
+            }
+        }
+        $classes = $classesQuery->pluck('class_group');
+
+        $totalCount = Participant::forUser($user)->count();
+
+        return view('pages.participants.index', compact('participants', 'studyPrograms', 'cohortYears', 'classes', 'totalCount', 'perPage'));
     }
 
     /**
@@ -53,6 +93,19 @@ class ParticipantController extends Controller
      */
     public function show(Participant $participant): View
     {
+        $user = auth()->user();
+
+        // Otorisasi: Timdis hanya dapat melihat mahasiswa dalam binaannya
+        if ($user && ! $user->isAdmin()) {
+            $isBinaan = Participant::where('id', $participant->id)
+                ->forUser($user)
+                ->exists();
+
+            if (! $isBinaan) {
+                abort(403, 'Anda tidak memiliki hak akses untuk melihat data mahasiswa di luar lingkup binaan Anda.');
+            }
+        }
+
         $participant->load([
             'activeRfidCard',
             'rfidCards' => fn ($q) => $q->orderBy('id', 'desc'),
@@ -77,7 +130,12 @@ class ParticipantController extends Controller
 
     public function create(): View
     {
-        return view('pages.participants.create');
+        $departments = Department::with(['studyPrograms.classes'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('pages.participants.create', compact('departments'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -85,8 +143,10 @@ class ParticipantController extends Controller
         $validated = $request->validate([
             'identifier' => 'required|string|max:64|unique:mahasiswa,npm',
             'name' => 'required|string|max:255',
+            'department' => 'nullable|string|max:150',
             'study_program' => 'nullable|string|max:100',
             'class_group' => 'nullable|string|max:50',
+            'cohort_year' => 'nullable|string|max:10',
             'gender' => 'nullable|in:L,P',
             'phone' => 'nullable|string|max:30',
             'initial_card_uid' => 'nullable|string|max:64',
@@ -135,8 +195,12 @@ class ParticipantController extends Controller
     public function edit(Participant $participant): View
     {
         $participant->load('activeRfidCard', 'rfidCards');
+        $departments = Department::with(['studyPrograms.classes'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
-        return view('pages.participants.edit', compact('participant'));
+        return view('pages.participants.edit', compact('participant', 'departments'));
     }
 
     public function update(Request $request, Participant $participant): RedirectResponse
@@ -144,8 +208,10 @@ class ParticipantController extends Controller
         $validated = $request->validate([
             'identifier' => ['required', 'string', 'max:64', Rule::unique('mahasiswa', 'npm')->ignore($participant->id, 'id_mahasiswa')],
             'name' => 'required|string|max:255',
+            'department' => 'nullable|string|max:150',
             'study_program' => 'nullable|string|max:100',
             'class_group' => 'nullable|string|max:50',
+            'cohort_year' => 'nullable|string|max:10',
             'gender' => 'nullable|in:L,P',
             'phone' => 'nullable|string|max:30',
             'is_active' => 'required|boolean',

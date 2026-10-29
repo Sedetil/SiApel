@@ -232,4 +232,16 @@ class PermissionRequest extends Model
     {
         return $this->attachment_path;
     }
+
+    public function scopeForUser($query, ?User $user = null)
+    {
+        if (! $user || $user->isAdmin()) {
+            return $query;
+        }
+
+        return $query->whereHas('participant', function ($q) use ($user) {
+            $q->forUser($user);
+        });
+    }
+    }
 }

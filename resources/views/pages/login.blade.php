@@ -146,7 +146,7 @@
                 </div>
                 <div class="p-2 rounded-sm bg-background border border-border/80">
                     <span class="block text-[11px] font-bold text-text-primary">Pembina</span>
-                    <span class="block text-[10px] text-text-secondary">Validasi Kompi</span>
+                    <span class="block text-[10px] text-text-secondary">Validasi Kelas</span>
                 </div>
                 <div class="p-2 rounded-sm bg-background border border-border/80">
                     <span class="block text-[11px] font-bold text-text-primary">Admin</span>

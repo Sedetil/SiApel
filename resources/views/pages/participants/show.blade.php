@@ -8,9 +8,9 @@
         <div>
             <div class="flex items-center gap-2 text-[12px] text-text-secondary mb-1">
                 @if(auth()->user()->isAdmin())
-                    <a href="{{ route('admin.participants.index') }}" class="hover:text-primary transition-colors">Data Peserta</a>
+                    <a href="{{ route('participants.index') }}" class="hover:text-primary transition-colors">Data Peserta</a>
                 @else
-                    <a href="{{ role_route('dashboard') }}" class="hover:text-primary transition-colors">Dashboard</a>
+                    <a href="{{ route('timdis.participants') }}" class="hover:text-primary transition-colors">Mahasiswa Saya</a>
                 @endif
                 <span>&bull;</span>
                 <span class="text-text-primary font-medium">Detail Peserta (Mode Baca)</span>
@@ -73,7 +73,7 @@
                         <span class="font-medium text-text-primary text-right">{{ $participant->study_program ?? '-' }}</span>
                     </div>
                     <div class="flex justify-between py-1 border-b border-border/50">
-                        <span class="text-text-secondary">Kompi / Pleton:</span>
+                        <span class="text-text-secondary">Kelas:</span>
                         <span class="font-medium text-text-primary text-right">{{ $participant->class_group ?? '-' }}</span>
                     </div>
                     <div class="flex justify-between py-1 border-b border-border/50">

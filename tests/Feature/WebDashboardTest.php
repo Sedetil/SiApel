@@ -315,4 +315,93 @@ class WebDashboardTest extends TestCase
             return $data['days'] === 90 && count($data['points']) === 90;
         });
     }
+
+    /**
+     * Verifikasi dashboard untuk akun Timdis menampilkan data scope wilayah binaan
+     */
+    public function test_timdis_dashboard_shows_scoped_metrics_and_total_mahasiswa_saya(): void
+    {
+        $timdis = User::create([
+            'name' => 'Dosen Pembina TRPL',
+            'username' => 'timdis_test_trpl',
+            'email' => 'timdis_trpl_uji@polinela.ac.id',
+            'password' => Hash::make('password123'),
+            'role' => 'timdis',
+            'department' => 'Teknologi Informasi',
+            'study_program' => 'Teknologi Rekayasa Perangkat Lunak',
+            'class_group' => 'TRPL 1B',
+            'cohort_year' => '2025',
+            'is_active' => true,
+        ]);
+
+        // 2 Mahasiswa binaan Timdis
+        $mhs1 = Participant::create([
+            'identifier' => '25753001',
+            'name' => 'Binaan 1',
+            'department' => 'Teknologi Informasi',
+            'study_program' => 'Teknologi Rekayasa Perangkat Lunak',
+            'class_group' => 'TRPL 1B',
+            'cohort_year' => '2025',
+            'is_active' => true,
+        ]);
+        $mhs2 = Participant::create([
+            'identifier' => '25753002',
+            'name' => 'Binaan 2',
+            'department' => 'Teknologi Informasi',
+            'study_program' => 'Teknologi Rekayasa Perangkat Lunak',
+            'class_group' => 'TRPL 1B',
+            'cohort_year' => '2025',
+            'is_active' => true,
+        ]);
+
+        // 1 Mahasiswa di luar binaan
+        Participant::create([
+            'identifier' => '24751099',
+            'name' => 'Bukan Binaan',
+            'department' => 'Ekonomi dan Bisnis',
+            'study_program' => 'Akuntansi Perpajakan',
+            'class_group' => 'AKT 4B',
+            'cohort_year' => '2023',
+            'is_active' => true,
+        ]);
+
+        $schedule = ApelSchedule::create([
+            'title' => 'Apel Pagi TRPL',
+            'schedule_date' => Carbon::today()->format('Y-m-d'),
+            'category' => 'rutin',
+            'start_time' => '07:00:00',
+            'end_time' => '08:00:00',
+            'attendance_start' => '06:30:00',
+            'attendance_end' => '08:00:00',
+            'late_threshold_time' => '07:15:00',
+            'location' => 'Lapangan Apel POLINELA',
+            'latitude' => -5.358249,
+            'longitude' => 105.242784,
+            'radius_meters' => 100,
+            'status' => 'active',
+            'created_by' => $this->admin->id,
+        ]);
+
+        AttendanceRecord::create([
+            'apel_schedule_id' => $schedule->id,
+            'participant_id' => $mhs1->id,
+            'check_in_time' => Carbon::now(),
+            'status' => 'hadir',
+        ]);
+
+        $response = $this->actingAs($timdis)->get('/dashboard');
+
+        $response->assertStatus(200);
+        $response->assertSee('TOTAL MAHASISWA SAYA');
+        $response->assertSee('Hadir tepat waktu');
+        $response->assertSee('Hadir terlambat');
+        $response->assertSee('Tidak hadir');
+        $response->assertSee('Izin & sakit', false);
+        $response->assertViewHas('stats', function ($stats) {
+            return $stats['is_timdis'] === true &&
+                   $stats['total_participants'] === 2 &&
+                   $stats['session_hadir'] === 1 &&
+                   $stats['session_tidak_hadir'] === 1;
+        });
+    }
 }

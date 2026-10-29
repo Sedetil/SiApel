@@ -119,7 +119,7 @@
                             <th class="py-3 px-4">NPM</th>
                             <th class="py-3 px-4">Nama Lengkap</th>
                             <th class="py-3 px-4">Program Studi</th>
-                            <th class="py-3 px-4">Kompi / Kelas</th>
+                            <th class="py-3 px-4">Kelas</th>
                             <th class="py-3 px-4">Sesi Apel</th>
                             <th class="py-3 px-4">Waktu Masuk</th>
                             <th class="py-3 px-4">Waktu Keluar</th>

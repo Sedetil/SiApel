@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ApelSchedule;
 use App\Models\AuditLog;
+use App\Models\Participant;
 use App\Models\PermissionRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,12 +14,22 @@ class PermissionRequestController extends Controller
 {
     public function index(Request $request): View
     {
-        $status = $request->query('status', 'all');
+        $user = auth()->user();
+        $status = $request->query('status', 'menunggu');
         $type = $request->query('type');
         $search = $request->query('search');
+        $studyProgram = $request->query('study_program');
+        $department = $request->query('department');
 
         $query = PermissionRequest::with(['participant', 'schedule', 'decider'])
             ->latest();
+
+        // Scope Timdis (hanya mahasiswa binaannya)
+        if ($user && ! $user->isAdmin()) {
+            $query->whereHas('participant', function ($q) use ($user) {
+                $q->forUser($user);
+            });
+        }
 
         if ($status === 'menunggu') {
             $query->where('status', 'menunggu');
@@ -39,25 +50,105 @@ class PermissionRequestController extends Controller
             });
         }
 
+        if ($studyProgram) {
+            $query->whereHas('participant', function ($q) use ($studyProgram) {
+                $q->where('study_program', 'like', "%{$studyProgram}%");
+            });
+        }
+
+        if ($department) {
+            $query->whereHas('participant', function ($q) use ($department) {
+                $q->where('department', 'like', "%{$department}%");
+            });
+        }
+
+        if ($request->filled('class_group')) {
+            $classGroup = $request->input('class_group');
+            $query->whereHas('participant', function ($q) use ($classGroup) {
+                $q->where('class_group', $classGroup);
+            });
+        }
+
         $requests = $query->paginate(12)->withQueryString();
 
+        // Query dasar untuk stats
+        $baseStatsQuery = PermissionRequest::query();
+        if ($user && ! $user->isAdmin()) {
+            $baseStatsQuery->whereHas('participant', function ($q) use ($user) {
+                $q->forUser($user);
+            });
+        }
+
         $stats = [
-            'total' => PermissionRequest::count(),
-            'menunggu' => PermissionRequest::where('status', 'menunggu')->count(),
-            'disetujui' => PermissionRequest::where('status', 'disetujui')->count(),
-            'ditolak' => PermissionRequest::where('status', 'ditolak')->count(),
+            'total' => (clone $baseStatsQuery)->count(),
+            'menunggu' => (clone $baseStatsQuery)->where('status', 'menunggu')->count(),
+            'disetujui' => (clone $baseStatsQuery)->where('status', 'disetujui')->count(),
+            'ditolak' => (clone $baseStatsQuery)->where('status', 'ditolak')->count(),
         ];
 
         $schedules = ApelSchedule::latest('schedule_date')->take(10)->get();
 
-        return view('pages.permissions.index', compact('requests', 'stats', 'schedules', 'status', 'type', 'search'));
+        // Data filter dinamis sesuai role
+        $departmentsQuery = Participant::select('department')->whereNotNull('department');
+        if ($user && ! $user->isAdmin() && ! empty($user->department)) {
+            $departmentsQuery->where('department', $user->department);
+        }
+        $departments = $departmentsQuery->distinct()->pluck('department');
+
+        $studyProgramsQuery = Participant::select('study_program')->whereNotNull('study_program');
+        if ($user && ! $user->isAdmin() && ! empty($user->department)) {
+            $studyProgramsQuery->where('department', $user->department);
+        }
+        if ($department) {
+            $studyProgramsQuery->where('department', $department);
+        }
+        $studyPrograms = $studyProgramsQuery->distinct()->pluck('study_program');
+
+        $cohortYearsQuery = Participant::select('cohort_year')->whereNotNull('cohort_year');
+        if ($user && ! $user->isAdmin() && ! empty($user->department)) {
+            $cohortYearsQuery->where('department', $user->department);
+        }
+        $cohortYears = $cohortYearsQuery->distinct()->orderBy('cohort_year', 'desc')->pluck('cohort_year');
+
+        return view('pages.permissions.index', compact(
+            'requests',
+            'stats',
+            'schedules',
+            'status',
+            'type',
+            'search',
+            'studyProgram',
+            'department',
+            'departments',
+            'studyPrograms',
+            'cohortYears'
+        ));
     }
 
     public function show(Request $request, $permissionRequest)
     {
+        $user = auth()->user();
+
         $req = $permissionRequest instanceof PermissionRequest
             ? $permissionRequest
             : PermissionRequest::find($permissionRequest);
+
+        // Keamanan Otorisasi: Timdis hanya bisa melihat pengajuan mahasiswa binaannya
+        if ($user && ! $user->isAdmin() && $req) {
+            $isBinaan = Participant::where('id', $req->participant_id)
+                ->forUser($user)
+                ->exists();
+
+            if (! $isBinaan) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Anda tidak memiliki wewenang untuk melihat pengajuan mahasiswa di luar lingkup binaan Anda.',
+                    ], 403);
+                }
+                abort(403, 'Anda tidak memiliki wewenang untuk melihat pengajuan mahasiswa di luar lingkup binaan Anda.');
+            }
+        }
 
         if (! $req) {
             $req = PermissionRequest::whereHas('participant', function ($q) {
@@ -91,6 +182,19 @@ class PermissionRequestController extends Controller
 
     public function decide(Request $request, PermissionRequest $permissionRequest): RedirectResponse
     {
+        $user = auth()->user();
+
+        // Keamanan Otorisasi: Timdis hanya bisa menyetujui/menolak pengajuan mahasiswa binaannya
+        if ($user && ! $user->isAdmin()) {
+            $isBinaan = Participant::where('id', $permissionRequest->participant_id)
+                ->forUser($user)
+                ->exists();
+
+            if (! $isBinaan) {
+                abort(403, 'Anda tidak memiliki hak akses untuk menyetujui atau menolak permohonan mahasiswa di luar binaan Anda.');
+            }
+        }
+
         $validated = $request->validate([
             'status' => 'required|in:disetujui,ditolak',
             'notes' => 'nullable|string|max:500',
@@ -102,6 +206,7 @@ class PermissionRequestController extends Controller
             $permissionRequest->terima($validated['notes'] ?? 'Disetujui oleh '.$user->name, $user->id);
         } else {
             $permissionRequest->tolak($validated['notes'] ?? 'Ditolak oleh '.$user->name, $user->id);
+        }
         }
 
         AuditLog::log(

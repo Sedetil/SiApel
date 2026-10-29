@@ -114,15 +114,22 @@
 
         <!-- Quick Demo Credentials Box -->
         <div class="mt-6 pt-5 border-t border-border/80">
-            <p class="text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-2 text-center">Akun Uji Coba</p>
-            <div class="grid grid-cols-2 gap-2">
-                <button type="button" onclick="fillCreds('admin', 'password123')" class="px-2.5 py-1.5 text-left rounded-sm border border-border bg-background hover:bg-primary/5 transition-colors text-[11px]">
-                    <span class="font-bold text-text-primary block">Admin</span>
-                    <span class="text-text-secondary text-[10px]">admin / password123</span>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-2 text-center">Pilihan Cepat Login Uji Coba</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button type="button" onclick="fillCreds('admin', 'password123')" class="px-2.5 py-2 text-left rounded-sm border border-border bg-background hover:bg-primary/5 transition-colors text-[11px]">
+                    <span class="font-bold text-text-primary block">Admin Utama</span>
+                    <span class="text-text-secondary text-[10px] block">Semua Jurusan</span>
+                    <span class="font-mono text-[9.5px] text-primary">admin</span>
                 </button>
-                <button type="button" onclick="fillCreds('timdis1', 'password123')" class="px-2.5 py-1.5 text-left rounded-sm border border-border bg-background hover:bg-primary/5 transition-colors text-[11px]">
-                    <span class="font-bold text-text-primary block">Timdis</span>
-                    <span class="text-text-secondary text-[10px]">timdis1 / password123</span>
+                <button type="button" onclick="fillCreds('timdis_mi', 'password123')" class="px-2.5 py-2 text-left rounded-sm border border-blue-200 bg-blue-50/40 hover:bg-blue-50 transition-colors text-[11px]">
+                    <span class="font-bold text-blue-800 block">Timdis MI</span>
+                    <span class="text-slate-500 text-[10px] block">Kelas MI 3A (2024)</span>
+                    <span class="font-mono text-[9.5px] text-primary">timdis_mi</span>
+                </button>
+                <button type="button" onclick="fillCreds('timdis_trpl', 'password123')" class="px-2.5 py-2 text-left rounded-sm border border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50 transition-colors text-[11px]">
+                    <span class="font-bold text-emerald-800 block">Timdis TRPL</span>
+                    <span class="text-slate-500 text-[10px] block">Kelas TRPL 1B (2025)</span>
+                    <span class="font-mono text-[9.5px] text-emerald-600">timdis_trpl</span>
                 </button>
             </div>
         </div>

@@ -115,7 +115,7 @@ class ReportController extends Controller
                 'NPM',
                 'Nama Peserta',
                 'Program Studi',
-                'Kompi / Pleton',
+                'Kelas',
                 'Jadwal Apel',
                 'Tanggal Apel',
                 'Waktu Masuk',

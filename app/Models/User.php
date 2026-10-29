@@ -41,6 +41,9 @@ class User extends Authenticatable
         'prodi_binaan',
         'study_program',
         'jurusan_binaan',
+        'department',
+        'class_group',
+        'cohort_year',
         'phone',
         'foto_profil',
         'avatar',
@@ -320,5 +323,35 @@ class User extends Authenticatable
     public function getProdiBinaanAttribute(): ?string
     {
         return $this->attributes['prodi_binaan'] ?? null;
+    }
+
+    /**
+     * Dapatkan daftar kelas yang dipegang oleh Timdis (Mendukung Multi-Scope)
+     *
+     * @return array<string>
+     */
+    public function getAssignedClassesAttribute(): array
+    {
+        if (empty($this->class_group)) {
+            return [];
+        }
+
+        $val = trim($this->class_group);
+
+        // Jika format JSON array (misal: ["TRPL 1A", "TRPL 1B"])
+        if (str_starts_with($val, '[') && str_ends_with($val, ']')) {
+            $decoded = json_decode($val, true);
+            if (is_array($decoded)) {
+                return array_filter(array_map('trim', $decoded));
+            }
+        }
+
+        // Jika format dipisah koma (misal: "TRPL 1A, TRPL 1B")
+        if (str_contains($val, ',')) {
+            return array_filter(array_map('trim', explode(',', $val)));
+        }
+
+        return [$val];
+    }
     }
 }

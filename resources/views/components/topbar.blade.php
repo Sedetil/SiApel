@@ -67,42 +67,29 @@
 <!-- REUSABLE TOPBAR COMPONENT -->
 <header {{ $attributes->merge(['class' => 'min-h-[60px] py-3.5 px-6 sm:px-8 bg-white border-b border-slate-200/90 flex items-center justify-between sticky top-0 z-30 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)]']) }}>
     
-    <!-- Left: Breadcrumb & Sidebar Toggle -->
-    <div class="flex items-center gap-3">
-        <!-- Sidebar Toggle (Mobile Drawer & Desktop Mini Sidebar) -->
-        <button 
-            type="button" 
-            id="sidebar-toggle-btn" 
-            class="p-1.5 -ml-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-            aria-label="Toggle Sidebar Navigation"
-            title="Tutup / Buka Sidebar"
-        >
-            <i data-lucide="panel-left" class="w-4 h-4"></i>
-        </button>
+    <!-- Left: Breadcrumb -->
+    <!-- Dynamic Breadcrumb Navigation -->
+    <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-xs select-none">
+        <a href="{{ function_exists('role_route') ? role_route('dashboard') : route('dashboard') }}" class="text-slate-400 hover:text-blue-600 transition-colors flex items-center" title="Kembali ke Dashboard">
+            <i data-lucide="home" class="w-3.5 h-3.5"></i>
+        </a>
 
-        <!-- Dynamic Breadcrumb Navigation -->
-        <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-xs select-none">
-            <a href="{{ role_route('dashboard') }}" class="text-slate-400 hover:text-blue-600 transition-colors flex items-center" title="Kembali ke Dashboard">
-                <i data-lucide="home" class="w-3.5 h-3.5"></i>
-            </a>
+        <span class="text-slate-300 flex items-center">
+            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+        </span>
 
-            <span class="text-slate-300 flex items-center">
-                <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
-            </span>
+        <span class="text-slate-500 hover:text-slate-700 transition-colors font-medium">
+            {{ $category }}
+        </span>
 
-            <span class="text-slate-500 hover:text-slate-700 transition-colors font-medium">
-                {{ $category }}
-            </span>
+        <span class="text-slate-300 flex items-center">
+            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+        </span>
 
-            <span class="text-slate-300 flex items-center">
-                <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
-            </span>
-
-            <strong class="text-slate-800 font-semibold text-[13px] tracking-tight">
-                {{ $title }}
-            </strong>
-        </nav>
-    </div>
+        <strong class="text-slate-800 font-semibold text-[13px] tracking-tight">
+            {{ $title }}
+        </strong>
+    </nav>
 
     <!-- Right: User Role & Avatar -->
     <div class="flex items-center gap-2.5">
