@@ -25,8 +25,8 @@ class OfficerController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'username' => 'required|string|max:100|unique:users,username',
-            'email' => 'required|email|max:255|unique:users,email',
+            'username' => 'required|string|max:100|unique:pengguna,username',
+            'email' => 'required|email|max:255|unique:pengguna,email',
             'password' => 'required|string|min:6',
             'study_program' => 'nullable|string|max:150',
             'role' => 'nullable|string|in:timdis,petugas',
@@ -55,15 +55,15 @@ class OfficerController extends Controller
             entityId: $officer->id
         );
 
-        return redirect()->route('officers.index')->with('status', "Akun {$role} {$officer->name} berhasil dibuat.");
+        return redirect()->route('admin.officers.index')->with('status', "Akun {$role} {$officer->name} berhasil dibuat.");
     }
 
     public function update(Request $request, User $officer): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'username' => ['required', 'string', 'max:100', Rule::unique('users', 'username')->ignore($officer->id)],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($officer->id)],
+            'username' => ['required', 'string', 'max:100', Rule::unique('pengguna', 'username')->ignore($officer->id, 'id_pengguna')],
+            'email' => ['required', 'email', 'max:255', Rule::unique('pengguna', 'email')->ignore($officer->id, 'id_pengguna')],
             'study_program' => 'nullable|string|max:150',
             'password' => 'nullable|string|min:6',
         ]);
@@ -88,7 +88,7 @@ class OfficerController extends Controller
             entityId: $officer->id
         );
 
-        return redirect()->route('officers.index')->with('status', "Data akun timdis {$officer->name} berhasil diperbarui.");
+        return redirect()->route('admin.officers.index')->with('status', "Data akun timdis {$officer->name} berhasil diperbarui.");
     }
 
     public function toggleStatus(User $officer): RedirectResponse
@@ -122,6 +122,6 @@ class OfficerController extends Controller
             entityId: $id
         );
 
-        return redirect()->route('officers.index')->with('status', "Akun timdis {$name} berhasil dihapus.");
+        return redirect()->route('admin.officers.index')->with('status', "Akun timdis {$name} berhasil dihapus.");
     }
 }

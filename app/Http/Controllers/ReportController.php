@@ -112,7 +112,7 @@ class ReportController extends Controller
             // Header Tabel
             fputcsv($handle, [
                 'No',
-                'NPM / NIM',
+                'NPM',
                 'Nama Peserta',
                 'Program Studi',
                 'Kompi / Pleton',
@@ -120,6 +120,8 @@ class ReportController extends Controller
                 'Tanggal Apel',
                 'Waktu Masuk',
                 'Waktu Keluar',
+                'Metode Scan',
+                'Menit Terlambat',
                 'Status Kehadiran',
                 'Timdis Pencatat',
             ]);
@@ -128,7 +130,7 @@ class ReportController extends Controller
             foreach ($records as $record) {
                 fputcsv($handle, [
                     $no++,
-                    $record->participant?->identifier ?? '-',
+                    $record->participant?->npm ?? $record->participant?->identifier ?? '-',
                     $record->participant?->name ?? '-',
                     $record->participant?->study_program ?? '-',
                     $record->participant?->class_group ?? '-',
@@ -136,6 +138,8 @@ class ReportController extends Controller
                     $record->schedule?->schedule_date?->format('d/m/Y') ?? '-',
                     $record->check_in_time ? $record->check_in_time->format('H:i:s') : '-',
                     $record->check_out_time ? $record->check_out_time->format('H:i:s') : '-',
+                    $record->metode ?? 'RFID',
+                    $record->hitungKeterlambatan().' menit',
                     strtoupper($record->status),
                     $record->recorder?->name ?? 'Sistem RFID',
                 ]);

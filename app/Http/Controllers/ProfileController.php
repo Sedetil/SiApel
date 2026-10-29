@@ -23,18 +23,52 @@ class ProfileController extends Controller
     {
         $user = auth()->user();
 
-        $validated = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
-            'username' => ['required', 'string', 'max:100', Rule::unique('users', 'username')->ignore($user->id)],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('pengguna', 'email')->ignore($user->id, 'id_pengguna')],
             'phone' => 'nullable|string|max:30',
-            'study_program' => 'nullable|string|max:150',
-        ], [
+        ];
+
+        if ($request->filled('username')) {
+            $rules['username'] = ['required', 'string', 'max:100', Rule::unique('pengguna', 'username')->ignore($user->id, 'id_pengguna')];
+        }
+
+        // Jika mengisi kata sandi baru atau kata sandi saat ini
+        if ($request->filled('password') || $request->filled('current_password')) {
+            $rules['current_password'] = 'required|string';
+            $rules['password'] = ['required', 'string', 'min:8', 'confirmed'];
+        }
+
+        $validated = $request->validate($rules, [
             'username.unique' => 'Username ini sudah digunakan oleh akun lain.',
             'email.unique' => 'Alamat email ini sudah terdaftar.',
+            'current_password.required' => 'Kata sandi saat ini wajib diisi jika ingin mengubah kata sandi.',
+            'password.min' => 'Kata sandi baru minimal harus 8 karakter.',
+            'password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
         ]);
 
-        $user->update($validated);
+        if (($request->filled('password') || $request->filled('current_password')) && ! Hash::check($request->input('current_password'), $user->password)) {
+            return back()->withInput()->withErrors(['current_password' => 'Kata sandi saat ini yang Anda masukkan salah.']);
+        }
+
+        $updateData = [
+            'name' => $validated['name'],
+        ];
+
+        if ($request->filled('email')) {
+            $updateData['email'] = $validated['email'];
+        }
+        if ($request->has('phone')) {
+            $updateData['phone'] = $validated['phone'];
+        }
+        if ($request->filled('username')) {
+            $updateData['username'] = $validated['username'];
+        }
+        if ($request->filled('password')) {
+            $updateData['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($updateData);
 
         AuditLog::log(
             action: 'UPDATE_PROFILE',
@@ -43,7 +77,7 @@ class ProfileController extends Controller
             entityId: $user->id
         );
 
-        return redirect()->route('profile.edit')->with('status', 'Data profil Anda berhasil diperbarui.');
+        return redirect()->route(role_route_name('profile.edit'))->with('status', 'Perubahan profil berhasil disimpan.');
     }
 
     public function updatePassword(Request $request): RedirectResponse
@@ -74,7 +108,7 @@ class ProfileController extends Controller
             entityId: $user->id
         );
 
-        return redirect()->route('profile.edit')->with('password_status', 'Kata sandi berhasil diubah.');
+        return redirect()->route(role_route_name('profile.edit'))->with('password_status', 'Kata sandi berhasil diubah.');
     }
 
     public function updateAvatar(Request $request): RedirectResponse
@@ -104,6 +138,6 @@ class ProfileController extends Controller
             entityId: $user->id
         );
 
-        return redirect()->route('profile.edit')->with('avatar_status', 'Foto profil berhasil diperbarui.');
+        return redirect()->route(role_route_name('profile.edit'))->with('avatar_status', 'Foto profil berhasil diperbarui.');
     }
 }

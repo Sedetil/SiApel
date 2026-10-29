@@ -78,9 +78,9 @@ class AttendanceServiceTest extends TestCase
         $this->assertEquals('CHECK_IN_SUCCESS', $result['code']);
         $this->assertEquals('hadir', $result['attendance']['status']);
 
-        $this->assertDatabaseHas('attendance_records', [
-            'apel_schedule_id' => $this->schedule->id,
-            'participant_id' => $this->participant->id,
+        $this->assertDatabaseHas('presensi', [
+            'id_apel' => $this->schedule->id,
+            'id_mahasiswa' => $this->participant->id,
             'status' => 'hadir',
         ]);
     }
@@ -121,9 +121,9 @@ class AttendanceServiceTest extends TestCase
         $this->assertEquals('CHECK_IN_SUCCESS', $result['code']);
         $this->assertEquals('terlambat', $result['attendance']['status']);
 
-        $this->assertDatabaseHas('attendance_records', [
-            'apel_schedule_id' => $this->schedule->id,
-            'participant_id' => $this->participant->id,
+        $this->assertDatabaseHas('presensi', [
+            'id_apel' => $this->schedule->id,
+            'id_mahasiswa' => $this->participant->id,
             'status' => 'terlambat',
         ]);
     }

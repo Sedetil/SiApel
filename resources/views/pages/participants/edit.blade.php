@@ -13,7 +13,7 @@
                 Perbarui biodata peserta dan kelola kartu RFID yang terhubung.
             </p>
         </div>
-        <a href="{{ route('participants.index') }}" class="text-[13px] font-medium text-text-secondary hover:text-text-primary">
+        <a href="{{ route('admin.participants.index') }}" class="text-[13px] font-medium text-text-secondary hover:text-text-primary">
             &larr; Kembali
         </a>
     </div>
@@ -24,13 +24,13 @@
         <div class="lg:col-span-7 bg-surface border border-border rounded-lg p-6 shadow-sm">
             <h2 class="text-[16px] font-bold text-text-primary mb-4 pb-2 border-b border-border">Informasi Biodata</h2>
 
-            <form method="POST" action="{{ route('participants.update', $participant) }}" class="space-y-4">
+            <form method="POST" action="{{ route('admin.participants.update', $participant) }}" class="space-y-4">
                 @csrf
                 @method('PUT')
 
                 <div>
                     <label for="identifier" class="block text-[12px] font-bold text-text-primary uppercase tracking-wider mb-1.5">
-                        NPM / NIM Mahasiswa <span class="text-error">*</span>
+                        NPM Mahasiswa <span class="text-error">*</span>
                     </label>
                     <input 
                         type="text" 
@@ -157,7 +157,7 @@
                         </div>
 
                         <!-- Deactivate Button -->
-                        <form method="POST" action="{{ route('participants.deactivate-rfid', $participant) }}" class="pt-2" onsubmit="return confirm('Apakah Anda yakin ingin menonaktifkan kartu RFID ini?')">
+                        <form method="POST" action="{{ route('admin.participants.deactivate-rfid', $participant) }}" class="pt-2" onsubmit="return confirm('Apakah Anda yakin ingin menonaktifkan kartu RFID ini?')">
                             @csrf
                             <button type="submit" class="w-full py-1.5 px-3 rounded-md bg-error/10 hover:bg-error/20 text-error text-[12px] font-medium transition-colors">
                                 Nonaktifkan Kartu Ini
@@ -178,7 +178,7 @@
                         {{ $participant->activeRfidCard ? 'Ganti dengan Kartu Baru' : 'Petakan Kartu RFID' }}
                     </h3>
                     
-                    <form method="POST" action="{{ route('participants.map-rfid', $participant) }}" class="space-y-3">
+                    <form method="POST" action="{{ route('admin.participants.map-rfid', $participant) }}" class="space-y-3">
                         @csrf
                         <div>
                             <input 

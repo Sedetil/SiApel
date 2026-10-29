@@ -16,13 +16,13 @@
 
         <div class="flex items-center gap-2">
             <!-- Export CSV / Excel Button -->
-            <a href="{{ route('reports.export-csv', request()->query()) }}" class="inline-flex items-center gap-1.5 bg-surface border border-border hover:bg-background text-text-primary px-3.5 py-2 rounded-md text-[13px] font-medium transition-colors shadow-sm">
+            <a href="{{ role_route('reports.export-csv', request()->query()) }}" class="inline-flex items-center gap-1.5 bg-surface border border-border hover:bg-background text-text-primary px-3.5 py-2 rounded-md text-[13px] font-medium transition-colors shadow-sm">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 text-success"></i>
                 <span>Ekspor Excel (CSV)</span>
             </a>
 
             <!-- Print / PDF Button -->
-            <a href="{{ route('reports.export-pdf', request()->query()) }}" target="_blank" class="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-dark text-white px-3.5 py-2 rounded-md text-[13px] font-medium transition-colors shadow-sm">
+            <a href="{{ role_route('reports.export-pdf', request()->query()) }}" target="_blank" class="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-dark text-white px-3.5 py-2 rounded-md text-[13px] font-medium transition-colors shadow-sm">
                 <i data-lucide="printer" class="w-4 h-4"></i>
                 <span>Cetak / PDF</span>
             </a>
@@ -31,7 +31,7 @@
 
     <!-- Filter Card -->
     <div class="bg-surface border border-border rounded-lg p-5 shadow-sm">
-        <form method="GET" action="{{ route('reports.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <form method="GET" action="{{ role_route('reports.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             
             <div>
                 <label for="schedule_id" class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1">Jadwal Apel</label>
@@ -74,7 +74,7 @@
                     <i data-lucide="filter" class="w-4 h-4"></i>
                     <span>Terapkan</span>
                 </button>
-                <a href="{{ route('reports.index') }}" class="bg-background hover:bg-border/40 text-text-secondary text-[13px] py-2 px-3 rounded-md transition-colors border border-border">
+                <a href="{{ role_route('reports.index') }}" class="bg-background hover:bg-border/40 text-text-secondary text-[13px] py-2 px-3 rounded-md transition-colors border border-border">
                     Reset
                 </a>
             </div>
@@ -116,7 +116,7 @@
                     <thead class="bg-background border-b border-border text-[11px] font-bold uppercase tracking-wider text-text-secondary">
                         <tr>
                             <th class="py-3 px-4">No</th>
-                            <th class="py-3 px-4">NPM / NIM</th>
+                            <th class="py-3 px-4">NPM</th>
                             <th class="py-3 px-4">Nama Lengkap</th>
                             <th class="py-3 px-4">Program Studi</th>
                             <th class="py-3 px-4">Kompi / Kelas</th>
@@ -137,7 +137,7 @@
                                 </td>
                                 <td class="py-3 px-4 font-bold text-text-primary">
                                     @if($record->participant_id)
-                                        <a href="{{ route('participants.show', $record->participant_id) }}" class="hover:text-primary transition-colors inline-flex items-center gap-1 group">
+                                        <a href="{{ role_route('participants.show', $record->participant_id) }}" class="hover:text-primary transition-colors inline-flex items-center gap-1 group">
                                             <span>{{ $record->participant?->name }}</span>
                                             <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-text-secondary group-hover:text-primary transition-colors shrink-0"></i>
                                         </a>

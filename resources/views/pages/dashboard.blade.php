@@ -72,15 +72,15 @@
 
                     <!-- Filter Pill Tabs (Functional Links) -->
                     <div class="flex bg-slate-100 rounded-md p-0.5 gap-0.5 text-[11px]">
-                        <a href="{{ route('dashboard', array_merge(request()->query(), ['trend_days' => 7])) }}" 
+                        <a href="{{ role_route('dashboard', array_merge(request()->query(), ['trend_days' => 7])) }}" 
                            class="px-2.5 py-1 rounded transition-all {{ $trendDays == 7 ? 'bg-white text-[#1d63dc] font-semibold shadow-sm' : 'text-slate-500 font-medium hover:text-slate-800' }}">
                             7 hari
                         </a>
-                        <a href="{{ route('dashboard', array_merge(request()->query(), ['trend_days' => 30])) }}" 
+                        <a href="{{ role_route('dashboard', array_merge(request()->query(), ['trend_days' => 30])) }}" 
                            class="px-2.5 py-1 rounded transition-all {{ $trendDays == 30 ? 'bg-white text-[#1d63dc] font-semibold shadow-sm' : 'text-slate-500 font-medium hover:text-slate-800' }}">
                             30 hari
                         </a>
-                        <a href="{{ route('dashboard', array_merge(request()->query(), ['trend_days' => 90])) }}" 
+                        <a href="{{ role_route('dashboard', array_merge(request()->query(), ['trend_days' => 90])) }}" 
                            class="px-2.5 py-1 rounded transition-all {{ $trendDays == 90 ? 'bg-white text-[#1d63dc] font-semibold shadow-sm' : 'text-slate-500 font-medium hover:text-slate-800' }}">
                             90 hari
                         </a>
@@ -226,9 +226,11 @@
             <div>
                 <div class="flex items-center justify-between mb-3.5">
                     <h3 class="text-[13.5px] font-bold text-slate-800 leading-tight">Jadwal apel</h3>
-                    <a href="{{ route('schedules.index') }}" class="text-[11.5px] text-[#1d63dc] font-semibold hover:underline flex items-center gap-1">
-                        <span>Kelola jadwal</span> &rarr;
-                    </a>
+                    @if(auth()->check() && auth()->user()->isAdmin())
+                        <a href="{{ route('admin.schedules.index') }}" class="text-[11.5px] text-[#1d63dc] font-semibold hover:underline flex items-center gap-1">
+                            <span>Kelola jadwal</span> &rarr;
+                        </a>
+                    @endif
                 </div>
 
                 @forelse($upcomingSchedules as $sched)
@@ -267,7 +269,7 @@
         <div class="bg-white border border-slate-200/90 rounded-xl p-5 shadow-[0_1px_3px_rgba(15,23,42,0.03)]">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-[13.5px] font-bold text-slate-800 leading-tight">Izin & sakit menunggu</h3>
-                <a href="{{ route('permission-requests.index') }}" class="text-[11.5px] text-[#1d63dc] font-semibold hover:underline flex items-center gap-1">
+                <a href="{{ role_route('permission-requests.index') }}" class="text-[11.5px] text-[#1d63dc] font-semibold hover:underline flex items-center gap-1">
                     <span>Lihat {{ $stats['pending_permissions'] }} pengajuan</span> &rarr;
                 </a>
             </div>
@@ -279,10 +281,10 @@
             </div>
 
             @forelse($recentPermissions as $perm)
-                <a href="{{ route('permission-requests.index') }}" class="flex items-center justify-between py-2.5 {{ !$loop->last ? 'border-b border-slate-100' : '' }} hover:bg-slate-50/50 px-1 rounded transition-colors group">
+                <a href="{{ role_route('permission-requests.index') }}" class="flex items-center justify-between py-2.5 {{ !$loop->last ? 'border-b border-slate-100' : '' }} hover:bg-slate-50/50 px-1 rounded transition-colors group">
                     <div>
                         <div class="font-bold text-[12px] text-slate-800 group-hover:text-primary transition-colors">{{ $perm->participant->name ?? 'Mahasiswa' }}</div>
-                        <div class="text-[10.5px] text-slate-400">{{ $perm->participant->nim ?? '-' }} &middot; {{ ucfirst($perm->type) }} &middot; {{ $perm->created_at->format('d M Y') }}</div>
+                        <div class="text-[10.5px] text-slate-400">{{ $perm->participant->npm ?? $perm->participant->identifier ?? '-' }} &middot; {{ ucfirst($perm->type) }} &middot; {{ $perm->created_at->format('d M Y') }}</div>
                     </div>
                     <div class="flex items-center gap-3">
                         <div class="text-right">
@@ -318,9 +320,11 @@
                     <div class="text-[10.5px] text-slate-400">{{ $stats['total_participants'] }} data mahasiswa tersinkron &middot; API Service Aktif</div>
                 </div>
             </div>
-            <a href="{{ route('ekuliah.index') }}" class="bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-700 text-[11.5px] font-semibold px-3 py-1.5 rounded-md transition-colors shrink-0 shadow-sm text-center">
-                Kelola integrasi
-            </a>
+            @if(auth()->check() && auth()->user()->isAdmin())
+                <a href="{{ route('admin.ekuliah.index') }}" class="bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-700 text-[11.5px] font-semibold px-3 py-1.5 rounded-md transition-colors shrink-0 shadow-sm text-center">
+                    Kelola integrasi
+                </a>
+            @endif
         </div>
 
         <!-- Footer Card 2: Akun Admin -->
@@ -335,7 +339,7 @@
                 </div>
             </div>
             @if(auth()->check() && auth()->user()->isAdmin())
-                <a href="{{ route('officers.index') }}" class="text-[11.5px] text-[#1d63dc] font-semibold hover:underline flex items-center gap-1 shrink-0">
+                <a href="{{ route('admin.officers.index') }}" class="text-[11.5px] text-[#1d63dc] font-semibold hover:underline flex items-center gap-1 shrink-0">
                     <span>Kelola akun</span> &rarr;
                 </a>
             @else

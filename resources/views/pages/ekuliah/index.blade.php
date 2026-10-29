@@ -78,7 +78,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('ekuliah.update-config') }}" class="space-y-4">
+                <form method="POST" action="{{ route('admin.ekuliah.update-config') }}" class="space-y-4">
                     @csrf
 
                     <div>
@@ -128,7 +128,7 @@
 
                 <div class="space-y-3">
                     <!-- Action: Sinkronisasi data (Mahasiswa, kelas, jadwal) -->
-                    <form method="POST" action="{{ route('ekuliah.sync-data') }}">
+                    <form method="POST" action="{{ route('admin.ekuliah.sync-data') }}">
                         @csrf
                         <button type="submit" class="w-full p-3.5 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-left transition-colors flex items-start justify-between group">
                             <div>
@@ -147,7 +147,7 @@
                     </form>
 
                     <!-- Action: Kirim kehadiran (Presensi yang belum tersinkron) -->
-                    <form method="POST" action="{{ route('ekuliah.sync-attendance') }}">
+                    <form method="POST" action="{{ route('admin.ekuliah.sync-attendance') }}">
                         @csrf
                         <button type="submit" class="w-full p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50 text-left transition-colors flex items-start justify-between group">
                             <div>

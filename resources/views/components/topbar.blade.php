@@ -8,13 +8,13 @@
 @php
     // Deteksi otomatis kategori breadcrumb berdasarkan route aktif jika tidak diisi manual
     if (!$category) {
-        if (request()->routeIs('permission-requests*')) {
+        if (request()->routeIs('*permission-requests*')) {
             $category = 'Verifikasi & Approval';
-        } elseif (request()->routeIs('participants*') || request()->routeIs('officers*')) {
+        } elseif (request()->routeIs('*participants*') || request()->routeIs('*officers*')) {
             $category = 'User Management';
-        } elseif (request()->routeIs('schedules*') || request()->routeIs('ekuliah*') || request()->routeIs('audit-logs*')) {
+        } elseif (request()->routeIs('*ekuliah*') || request()->routeIs('*audit-logs*')) {
             $category = 'Pengaturan Sistem';
-        } elseif (request()->routeIs('profile*')) {
+        } elseif (request()->routeIs('*profile*')) {
             $category = 'Akun';
         } else {
             $category = 'Menu Utama';
@@ -23,29 +23,29 @@
 
     // Deteksi otomatis judul halaman aktif berdasarkan route jika tidak diisi manual
     if (!$title) {
-        if (request()->routeIs('dashboard*')) {
+        if (request()->routeIs('*dashboard*')) {
             $title = 'Dashboard';
-        } elseif (request()->routeIs('attendance.history*')) {
+        } elseif (request()->routeIs('*attendance.history*')) {
             $title = 'Riwayat Absensi';
-        } elseif (request()->routeIs('permission-requests*')) {
+        } elseif (request()->routeIs('*permission-requests*')) {
             $title = 'Izin & Sakit';
-        } elseif (request()->routeIs('participants.create')) {
+        } elseif (request()->routeIs('*participants.create')) {
             $title = 'Tambah Mahasiswa';
-        } elseif (request()->routeIs('participants.show')) {
+        } elseif (request()->routeIs('*participants.show')) {
             $title = 'Detail Mahasiswa';
-        } elseif (request()->routeIs('participants*')) {
-            $title = 'Mahasiswa';
-        } elseif (request()->routeIs('officers*')) {
-            $title = 'Timdis';
-        } elseif (request()->routeIs('schedules*')) {
-            $title = 'Kelola Apel';
-        } elseif (request()->routeIs('ekuliah*')) {
+        } elseif (request()->routeIs('*participants*') || request()->routeIs('*mahasiswa*')) {
+            $title = 'Data Mahasiswa';
+        } elseif (request()->routeIs('*officers*') || request()->routeIs('*timdis*')) {
+            $title = 'Data Timdis';
+        } elseif (request()->routeIs('*schedules*') || request()->routeIs('*jadwal*')) {
+            $title = 'Atur Jadwal Khusus';
+        } elseif (request()->routeIs('*ekuliah*')) {
             $title = 'Integrasi E-Kuliah';
-        } elseif (request()->routeIs('audit-logs*')) {
+        } elseif (request()->routeIs('*audit-logs*')) {
             $title = 'Audit Trail';
-        } elseif (request()->routeIs('profile*')) {
+        } elseif (request()->routeIs('*profile*')) {
             $title = 'Edit Profil';
-        } elseif (request()->routeIs('reports*')) {
+        } elseif (request()->routeIs('*reports*')) {
             $title = 'Rekap Laporan';
         } else {
             $title = 'Dashboard';
@@ -82,7 +82,7 @@
 
         <!-- Dynamic Breadcrumb Navigation -->
         <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-xs select-none">
-            <a href="{{ route('dashboard') }}" class="text-slate-400 hover:text-blue-600 transition-colors flex items-center" title="Kembali ke Dashboard">
+            <a href="{{ role_route('dashboard') }}" class="text-slate-400 hover:text-blue-600 transition-colors flex items-center" title="Kembali ke Dashboard">
                 <i data-lucide="home" class="w-3.5 h-3.5"></i>
             </a>
 

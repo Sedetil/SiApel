@@ -55,6 +55,12 @@
                 padding-left: 72px !important;
             }
 
+            html.sidebar-collapsed #app-sidebar > div.flex-1,
+            #app-sidebar.sidebar-collapsed > div.flex-1 {
+                padding-left: 0.5rem !important;
+                padding-right: 0.5rem !important;
+            }
+
             html.sidebar-collapsed #app-sidebar .sidebar-label,
             #app-sidebar.sidebar-collapsed .sidebar-label {
                 display: none !important;
@@ -72,22 +78,61 @@
 
             html.sidebar-collapsed #app-sidebar .sidebar-nav-link,
             #app-sidebar.sidebar-collapsed .sidebar-nav-link {
+                width: 44px !important;
+                height: 44px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                padding: 0 !important;
+                display: flex !important;
+                align-items: center !important;
                 justify-content: center !important;
-                padding-left: 0.5rem !important;
-                padding-right: 0.5rem !important;
+                border-radius: 12px !important;
             }
 
             html.sidebar-collapsed #app-sidebar .sidebar-user-card,
             #app-sidebar.sidebar-collapsed .sidebar-user-card {
+                width: 44px !important;
+                height: 44px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                padding: 0 !important;
+                display: flex !important;
+                align-items: center !important;
                 justify-content: center !important;
-                padding: 0.4rem !important;
+                border-radius: 12px !important;
+                overflow: hidden !important;
+            }
+
+            html.sidebar-collapsed #app-sidebar .sidebar-user-card > div,
+            #app-sidebar.sidebar-collapsed .sidebar-user-card > div {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+            }
+
+            html.sidebar-collapsed #app-sidebar .sidebar-user-card .w-7,
+            #app-sidebar.sidebar-collapsed .sidebar-user-card .w-7 {
+                width: 28px !important;
+                height: 28px !important;
+                margin: 0 auto !important;
+                flex-shrink: 0 !important;
             }
 
             html.sidebar-collapsed #app-sidebar #sidebar-logo,
             #app-sidebar.sidebar-collapsed #sidebar-logo {
+                width: 44px !important;
+                height: 44px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                padding: 0 !important;
+                display: flex !important;
+                align-items: center !important;
                 justify-content: center !important;
-                padding-left: 0 !important;
-                padding-right: 0 !important;
             }
 
             html.sidebar-collapsed #app-sidebar .sidebar-badge,
@@ -108,8 +153,20 @@
             html.sidebar-collapsed #app-sidebar .sidebar-footer-content,
             #app-sidebar.sidebar-collapsed .sidebar-footer-content {
                 justify-content: center !important;
-                padding-left: 0.5rem !important;
-                padding-right: 0.5rem !important;
+                padding: 0.75rem 0.5rem !important;
+            }
+
+            html.sidebar-collapsed #app-sidebar .sidebar-footer-content > div:first-child {
+                display: none !important;
+            }
+
+            html.sidebar-collapsed #app-sidebar .sidebar-footer-content a {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 36px !important;
+                height: 36px !important;
+                border-radius: 8px !important;
             }
         }
 

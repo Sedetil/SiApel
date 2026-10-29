@@ -13,20 +13,20 @@
                 Daftarkan peserta apel baru dan petakan kartu RFID jika tersedia.
             </p>
         </div>
-        <a href="{{ route('participants.index') }}" class="text-[13px] font-medium text-text-secondary hover:text-text-primary">
+        <a href="{{ route('admin.participants.index') }}" class="text-[13px] font-medium text-text-secondary hover:text-text-primary">
             &larr; Kembali
         </a>
     </div>
 
     <!-- Form Card -->
     <div class="bg-surface border border-border rounded-lg p-6 sm:p-8 shadow-sm">
-        <form method="POST" action="{{ route('participants.store') }}" class="space-y-5">
+        <form method="POST" action="{{ route('admin.participants.store') }}" class="space-y-5">
             @csrf
 
-            <!-- NPM / Identifier -->
+            <!-- NPM Mahasiswa -->
             <div>
                 <label for="identifier" class="block text-[12px] font-bold text-text-primary uppercase tracking-wider mb-2">
-                    NPM / NIM Mahasiswa <span class="text-error">*</span>
+                    NPM Mahasiswa <span class="text-error">*</span>
                 </label>
                 <input 
                     type="text" 
@@ -140,7 +140,7 @@
 
             <!-- Submit Buttons -->
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-border">
-                <a href="{{ route('participants.index') }}" class="px-4 py-2.5 border border-border text-text-secondary hover:bg-background rounded-md text-[13px] font-medium transition-colors">
+                <a href="{{ route('admin.participants.index') }}" class="px-4 py-2.5 border border-border text-text-secondary hover:bg-background rounded-md text-[13px] font-medium transition-colors">
                     Batal
                 </a>
                 <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-md text-[13px] font-medium transition-colors shadow-sm">

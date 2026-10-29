@@ -149,7 +149,7 @@
     <div class="border-b border-slate-100 flex items-center gap-6 text-[13px] pt-1">
         
         <!-- Tab: Menunggu (Aktif Default) -->
-        <a href="{{ route('permission-requests.index', ['status' => 'menunggu', 'type' => $type, 'search' => $search]) }}"
+        <a href="{{ role_route('permission-requests.index', ['status' => 'menunggu', 'type' => $type, 'search' => $search]) }}"
            class="flex items-center gap-1.5 pb-2.5 font-semibold transition-colors cursor-pointer border-b-2 {{ $currentStatus === 'menunggu' || $currentStatus === 'all' || !$currentStatus ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
             <span>Menunggu</span>
             <span class="inline-flex items-center justify-center px-1.5 py-0.2 rounded-full text-[11px] font-bold {{ $currentStatus === 'menunggu' || $currentStatus === 'all' || !$currentStatus ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-600' }}">
@@ -158,19 +158,19 @@
         </a>
 
         <!-- Tab: Disetujui -->
-        <a href="{{ route('permission-requests.index', ['status' => 'disetujui', 'type' => $type, 'search' => $search]) }}"
+        <a href="{{ role_route('permission-requests.index', ['status' => 'disetujui', 'type' => $type, 'search' => $search]) }}"
            class="flex items-center gap-1.5 pb-2.5 font-medium transition-colors cursor-pointer border-b-2 {{ $currentStatus === 'disetujui' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
             <span>Disetujui</span>
         </a>
 
         <!-- Tab: Ditolak -->
-        <a href="{{ route('permission-requests.index', ['status' => 'ditolak', 'type' => $type, 'search' => $search]) }}"
+        <a href="{{ role_route('permission-requests.index', ['status' => 'ditolak', 'type' => $type, 'search' => $search]) }}"
            class="flex items-center gap-1.5 pb-2.5 font-medium transition-colors cursor-pointer border-b-2 {{ $currentStatus === 'ditolak' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
             <span>Ditolak</span>
         </a>
 
         <!-- Tab: Semua -->
-        <a href="{{ route('permission-requests.index', ['status' => 'all', 'type' => $type, 'search' => $search]) }}"
+        <a href="{{ role_route('permission-requests.index', ['status' => 'all', 'type' => $type, 'search' => $search]) }}"
            class="flex items-center gap-1.5 pb-2.5 font-medium transition-colors cursor-pointer border-b-2 {{ $currentStatus === 'all' ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
             <span>Semua</span>
         </a>
@@ -178,7 +178,7 @@
     </div>
 
     <!-- Baris Pencarian & Filter Dropdowns -->
-    <form method="GET" action="{{ route('permission-requests.index') }}" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+    <form method="GET" action="{{ role_route('permission-requests.index') }}" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
         <input type="hidden" name="status" value="{{ $currentStatus }}">
 
         <!-- Input Pencarian Lebar -->
@@ -272,8 +272,8 @@
                     @endphp
 
                     <div 
-                        onclick="openDetailModal({{ json_encode($req) }})"
-                        class="px-4 py-3.5 flex items-center transition-colors cursor-pointer group {{ $isFirst ? 'border-l-4 border-blue-600 bg-blue-50/20' : 'border-l-4 border-transparent hover:bg-slate-50/70' }}"
+                        onclick="window.location.href = '{{ role_route('permission-requests.show', $req->id) }}'"
+                        class="px-4 py-3.5 flex items-center transition-all cursor-pointer group border-l-4 border-transparent hover:border-blue-600 hover:bg-blue-50/30"
                     >
                         <!-- Kolom Mahasiswa: Avatar, Nama, Prodi -->
                         <div class="w-[45%] sm:w-[48%] flex items-center gap-3 min-w-0 pr-2">
@@ -281,7 +281,7 @@
                                 {{ $initials }}
                             </div>
                             <div class="min-w-0">
-                                <div class="text-[13.5px] font-bold truncate {{ $isFirst ? 'text-blue-600' : 'text-slate-900 group-hover:text-blue-600' }}">
+                                <div class="text-[13.5px] font-bold truncate text-slate-900 group-hover:text-blue-600 transition-colors">
                                     {{ $name }}
                                 </div>
                                 <div class="text-[11.5px] text-slate-400 font-normal truncate">
@@ -306,7 +306,7 @@
                             <span class="text-[12.5px] text-slate-700 font-medium truncate">
                                 {{ $dateFormatted }}
                             </span>
-                            <i data-lucide="chevron-right" class="w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5 {{ $isFirst ? 'text-blue-500' : 'text-slate-300 group-hover:text-slate-500' }}"></i>
+                            <i data-lucide="chevron-right" class="w-4 h-4 shrink-0 transition-transform text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5"></i>
                         </div>
                     </div>
                 @endforeach
@@ -314,8 +314,8 @@
                 {{-- Mock data 8 pengajuan persis seperti desain mockup UI --}}
                 @foreach($mockItems as $index => $item)
                     <div 
-                        onclick="openDetailModal({{ json_encode($item) }})"
-                        class="px-4 py-3.5 flex items-center transition-colors cursor-pointer group {{ $item['is_active'] ? 'border-l-4 border-blue-600 bg-blue-50/20' : 'border-l-4 border-transparent hover:bg-slate-50/70' }}"
+                        onclick="window.location.href = '{{ role_route('permission-requests.show', $item['id']) }}'"
+                        class="px-4 py-3.5 flex items-center transition-all cursor-pointer group border-l-4 border-transparent hover:border-blue-600 hover:bg-blue-50/30"
                     >
                         <!-- Kolom Mahasiswa: Avatar, Nama, Prodi -->
                         <div class="w-[45%] sm:w-[48%] flex items-center gap-3 min-w-0 pr-2">
@@ -323,7 +323,7 @@
                                 {{ $item['initials'] }}
                             </div>
                             <div class="min-w-0">
-                                <div class="text-[13.5px] font-bold truncate {{ $item['is_active'] ? 'text-blue-600' : 'text-slate-900 group-hover:text-blue-600' }}">
+                                <div class="text-[13.5px] font-bold truncate text-slate-900 group-hover:text-blue-600 transition-colors">
                                     {{ $item['name'] }}
                                 </div>
                                 <div class="text-[11.5px] text-slate-400 font-normal truncate">
@@ -348,7 +348,7 @@
                             <span class="text-[12.5px] text-slate-700 font-medium truncate">
                                 {{ $item['date_range'] }}
                             </span>
-                            <i data-lucide="chevron-right" class="w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5 {{ $item['is_active'] ? 'text-blue-500' : 'text-slate-300 group-hover:text-slate-500' }}"></i>
+                            <i data-lucide="chevron-right" class="w-4 h-4 shrink-0 transition-transform text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5"></i>
                         </div>
                     </div>
                 @endforeach

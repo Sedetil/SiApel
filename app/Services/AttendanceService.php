@@ -291,13 +291,16 @@ class AttendanceService
 
             // Tentukan status hadir atau terlambat berbasis waktu backend
             $attendanceStatus = $schedule->determineStatus($now);
+            $menitTerlambat = $schedule->hitungMenitKeterlambatan($now);
 
             $record = AttendanceRecord::create([
                 'apel_schedule_id' => $schedule->id,
                 'participant_id' => $participant->id,
                 'rfid_card_id' => $card->id,
                 'check_in_time' => $now,
+                'metode' => 'RFID',
                 'status' => $attendanceStatus,
+                'menit_terlambat' => $menitTerlambat,
                 'recorded_by' => $recordedBy,
                 'device_identifier' => $deviceIdentifier,
             ]);
@@ -328,6 +331,8 @@ class AttendanceService
                 ],
                 'attendance' => [
                     'status' => $attendanceStatus,
+                    'menit_terlambat' => $menitTerlambat,
+                    'metode' => 'RFID',
                     'check_in_time' => $now->format('H:i:s'),
                     'late_threshold' => $schedule->late_threshold_time,
                 ],

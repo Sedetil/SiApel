@@ -12,13 +12,13 @@
                 Perbarui parameter waktu dan status sesi apel.
             </p>
         </div>
-        <a href="{{ route('schedules.index') }}" class="text-[13px] font-medium text-text-secondary hover:text-text-primary">
+        <a href="{{ route('admin.schedules.index') }}" class="text-[13px] font-medium text-text-secondary hover:text-text-primary">
             &larr; Kembali
         </a>
     </div>
 
     <div class="bg-surface border border-border rounded-lg p-6 sm:p-8 shadow-sm">
-        <form method="POST" action="{{ route('schedules.update', $schedule) }}" class="space-y-5">
+        <form method="POST" action="{{ route('admin.schedules.update', $schedule) }}" class="space-y-5">
             @csrf
             @method('PUT')
 
@@ -195,7 +195,7 @@
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-border">
-                <a href="{{ route('schedules.index') }}" class="px-4 py-2.5 border border-border text-text-secondary hover:bg-background rounded-md text-[13px] font-medium transition-colors">
+                <a href="{{ route('admin.schedules.index') }}" class="px-4 py-2.5 border border-border text-text-secondary hover:bg-background rounded-md text-[13px] font-medium transition-colors">
                     Batal
                 </a>
                 <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-md text-[13px] font-medium transition-colors shadow-sm">

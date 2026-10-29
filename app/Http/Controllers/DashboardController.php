@@ -110,9 +110,9 @@ class DashboardController extends Controller
                 'izin_sakit_pct' => round($izinRate + $sakitRate, 1),
                 'tidak_hadir_pct' => $tidakHadirRate,
             ],
-            'pending_permissions' => Schema::hasTable('permission_requests') ? PermissionRequest::where('status', 'menunggu')->count() : 0,
-            'pending_izin' => Schema::hasTable('permission_requests') ? PermissionRequest::where('status', 'menunggu')->where('type', 'izin')->count() : 0,
-            'pending_sakit' => Schema::hasTable('permission_requests') ? PermissionRequest::where('status', 'menunggu')->where('type', 'sakit')->count() : 0,
+            'pending_permissions' => Schema::hasTable('pengajuan_izin') ? PermissionRequest::where('status', 'menunggu')->count() : 0,
+            'pending_izin' => Schema::hasTable('pengajuan_izin') ? PermissionRequest::where('status', 'menunggu')->where('type', 'izin')->count() : 0,
+            'pending_sakit' => Schema::hasTable('pengajuan_izin') ? PermissionRequest::where('status', 'menunggu')->where('type', 'sakit')->count() : 0,
             'total_admins' => User::where('role', 'admin')->count(),
             'total_timdis' => User::whereIn('role', ['timdis', 'petugas'])->count(),
         ];
@@ -314,7 +314,7 @@ class DashboardController extends Controller
         ];
 
         // Recent Permission Requests for Dashboard preview
-        $recentPermissions = Schema::hasTable('permission_requests')
+        $recentPermissions = Schema::hasTable('pengajuan_izin')
             ? PermissionRequest::with(['participant', 'decider'])->latest()->take(4)->get()
             : collect();
 

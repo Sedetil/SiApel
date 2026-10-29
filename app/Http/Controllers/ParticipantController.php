@@ -83,7 +83,7 @@ class ParticipantController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'identifier' => 'required|string|max:64|unique:participants,identifier',
+            'identifier' => 'required|string|max:64|unique:mahasiswa,npm',
             'name' => 'required|string|max:255',
             'study_program' => 'nullable|string|max:100',
             'class_group' => 'nullable|string|max:50',
@@ -91,9 +91,9 @@ class ParticipantController extends Controller
             'phone' => 'nullable|string|max:30',
             'initial_card_uid' => 'nullable|string|max:64',
         ], [
-            'identifier.required' => 'NPM / NIM peserta wajib diisi.',
-            'identifier.unique' => 'NPM / NIM ini sudah terdaftar dalam sistem.',
-            'name.required' => 'Nama lengkap peserta wajib diisi.',
+            'identifier.required' => 'NPM mahasiswa wajib diisi.',
+            'identifier.unique' => 'NPM ini sudah terdaftar dalam sistem.',
+            'name.required' => 'Nama lengkap mahasiswa wajib diisi.',
         ]);
 
         DB::transaction(function () use ($validated) {
@@ -129,7 +129,7 @@ class ParticipantController extends Controller
             );
         });
 
-        return redirect()->route('participants.index')->with('status', 'Data peserta berhasil ditambahkan.');
+        return redirect()->route('admin.participants.index')->with('status', 'Data peserta berhasil ditambahkan.');
     }
 
     public function edit(Participant $participant): View
@@ -142,13 +142,17 @@ class ParticipantController extends Controller
     public function update(Request $request, Participant $participant): RedirectResponse
     {
         $validated = $request->validate([
-            'identifier' => ['required', 'string', 'max:64', Rule::unique('participants', 'identifier')->ignore($participant->id)],
+            'identifier' => ['required', 'string', 'max:64', Rule::unique('mahasiswa', 'npm')->ignore($participant->id, 'id_mahasiswa')],
             'name' => 'required|string|max:255',
             'study_program' => 'nullable|string|max:100',
             'class_group' => 'nullable|string|max:50',
             'gender' => 'nullable|in:L,P',
             'phone' => 'nullable|string|max:30',
             'is_active' => 'required|boolean',
+        ], [
+            'identifier.required' => 'NPM mahasiswa wajib diisi.',
+            'identifier.unique' => 'NPM ini sudah terdaftar dalam sistem.',
+            'name.required' => 'Nama lengkap mahasiswa wajib diisi.',
         ]);
 
         $participant->update($validated);
@@ -160,7 +164,7 @@ class ParticipantController extends Controller
             entityId: $participant->id
         );
 
-        return redirect()->route('participants.index')->with('status', 'Data peserta berhasil diperbarui.');
+        return redirect()->route('admin.participants.index')->with('status', 'Data peserta berhasil diperbarui.');
     }
 
     public function toggleStatus(Participant $participant): RedirectResponse

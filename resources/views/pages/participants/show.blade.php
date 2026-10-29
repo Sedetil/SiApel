@@ -8,9 +8,9 @@
         <div>
             <div class="flex items-center gap-2 text-[12px] text-text-secondary mb-1">
                 @if(auth()->user()->isAdmin())
-                    <a href="{{ route('participants.index') }}" class="hover:text-primary transition-colors">Data Peserta</a>
+                    <a href="{{ route('admin.participants.index') }}" class="hover:text-primary transition-colors">Data Peserta</a>
                 @else
-                    <a href="{{ route('dashboard') }}" class="hover:text-primary transition-colors">Dashboard</a>
+                    <a href="{{ role_route('dashboard') }}" class="hover:text-primary transition-colors">Dashboard</a>
                 @endif
                 <span>&bull;</span>
                 <span class="text-text-primary font-medium">Detail Peserta (Mode Baca)</span>
@@ -19,13 +19,13 @@
                 {{ $participant->name }}
             </h1>
             <p class="text-[13px] text-text-secondary">
-                Nomor Induk: <strong class="font-mono text-text-primary">{{ $participant->identifier }}</strong>
+                NPM: <strong class="font-mono text-text-primary">{{ $participant->npm ?? $participant->identifier }}</strong>
             </p>
         </div>
 
         <div class="flex items-center gap-2">
             @if(auth()->user()->isAdmin())
-                <a href="{{ route('participants.edit', $participant) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary hover:bg-primary-dark text-white text-[13px] font-medium rounded-md transition-colors shadow-sm">
+                <a href="{{ route('admin.participants.edit', $participant) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary hover:bg-primary-dark text-white text-[13px] font-medium rounded-md transition-colors shadow-sm">
                     <i data-lucide="edit-3" class="w-4 h-4"></i>
                     <span>Kelola Peserta</span>
                 </a>

@@ -8,13 +8,13 @@ use App\Models\Participant;
 use App\Models\PermissionRequest;
 use App\Models\SystemSetting;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class IaFeaturesIntegrationTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected User $admin;
 
@@ -61,12 +61,12 @@ class IaFeaturesIntegrationTest extends TestCase
             'status' => 'menunggu',
         ]);
 
-        $response = $this->actingAs($this->admin)->get('/izin-sakit');
+        $response = $this->actingAs($this->admin)->get('/admin/izin-sakit');
         $response->assertStatus(200);
         $response->assertSee('Demam tinggi dan istirahat dokter');
 
         // Filter tab menunggu
-        $responseFiltered = $this->actingAs($this->admin)->get('/izin-sakit?status=menunggu');
+        $responseFiltered = $this->actingAs($this->admin)->get('/admin/izin-sakit?status=menunggu');
         $responseFiltered->assertStatus(200);
         $responseFiltered->assertSee($participant->name);
     }
@@ -103,34 +103,34 @@ class IaFeaturesIntegrationTest extends TestCase
             'status' => 'menunggu',
         ]);
 
-        $response = $this->actingAs($this->timdis)->post("/izin-sakit/{$request->id}/decide", [
+        $response = $this->actingAs($this->timdis)->post("/timdis/izin-sakit/{$request->id}/decide", [
             'status' => 'disetujui',
             'review_notes' => 'Disetujui untuk mewakili kampus',
         ]);
 
         $response->assertRedirect();
-        $this->assertDatabaseHas('permission_requests', [
-            'id' => $request->id,
+        $this->assertDatabaseHas('pengajuan_izin', [
+            'id_izin' => $request->id,
             'status' => 'disetujui',
-            'decided_by' => $this->timdis->id,
+            'id_timdis' => $this->timdis->id,
         ]);
 
         // Verifikasi sinkronisasi otomatis ke AttendanceRecord
-        $this->assertDatabaseHas('attendance_records', [
-            'participant_id' => $participant->id,
-            'apel_schedule_id' => $schedule->id,
+        $this->assertDatabaseHas('presensi', [
+            'id_mahasiswa' => $participant->id,
+            'id_apel' => $schedule->id,
             'status' => 'izin',
         ]);
     }
 
     public function test_ekuliah_integration_page_and_configuration()
     {
-        $response = $this->actingAs($this->admin)->get('/integrasi-ekuliah');
+        $response = $this->actingAs($this->admin)->get('/admin/integrasi-ekuliah');
         $response->assertStatus(200);
         $response->assertSee('Integrasi Sistem E-Kuliah');
 
         // Update Configuration
-        $postResponse = $this->actingAs($this->admin)->post('/integrasi-ekuliah/config', [
+        $postResponse = $this->actingAs($this->admin)->post('/admin/integrasi-ekuliah/config', [
             'ekuliah_url' => 'https://ekuliah-new.polinela.ac.id/api/v2',
             'ekuliah_api_key' => 'new_secret_key_12345',
             'ekuliah_auto_sync' => '1',
@@ -140,9 +140,9 @@ class IaFeaturesIntegrationTest extends TestCase
         $this->assertEquals('https://ekuliah-new.polinela.ac.id/api/v2', SystemSetting::get('ekuliah_url'));
 
         // Test manual sync action
-        $syncResponse = $this->actingAs($this->admin)->post('/integrasi-ekuliah/sync-data');
+        $syncResponse = $this->actingAs($this->admin)->post('/admin/integrasi-ekuliah/sync-data');
         $syncResponse->assertRedirect();
-        $this->assertDatabaseHas('ekuliah_sync_logs', [
+        $this->assertDatabaseHas('log_sinkronisasi', [
             'sync_type' => 'mahasiswa',
             'status' => 'success',
         ]);
@@ -150,12 +150,12 @@ class IaFeaturesIntegrationTest extends TestCase
 
     public function test_user_can_edit_profile_and_change_password()
     {
-        $response = $this->actingAs($this->admin)->get('/profile');
+        $response = $this->actingAs($this->admin)->get('/admin/profile');
         $response->assertStatus(200);
-        $response->assertSee('Edit Profil Akun');
+        $response->assertSee('Edit Profil');
 
-        // Update Profile Info via PUT to /profile
-        $updateProfile = $this->actingAs($this->admin)->put('/profile', [
+        // Update Profile Info via PUT to /admin/profile
+        $updateProfile = $this->actingAs($this->admin)->put('/admin/profile', [
             'name' => 'Administrator Baru',
             'username' => 'admin_baru',
             'email' => 'admin_baru@polinela.ac.id',
@@ -164,14 +164,14 @@ class IaFeaturesIntegrationTest extends TestCase
         ]);
 
         $updateProfile->assertRedirect();
-        $this->assertDatabaseHas('users', [
-            'id' => $this->admin->id,
-            'name' => 'Administrator Baru',
+        $this->assertDatabaseHas('pengguna', [
+            'id_pengguna' => $this->admin->id,
+            'nama' => 'Administrator Baru',
             'username' => 'admin_baru',
         ]);
 
         // Change Password via PUT
-        $changePassword = $this->actingAs($this->admin)->put('/profile/password', [
+        $changePassword = $this->actingAs($this->admin)->put('/admin/profile/password', [
             'current_password' => 'password123',
             'password' => 'newPassword_456',
             'password_confirmation' => 'newPassword_456',
@@ -210,13 +210,13 @@ class IaFeaturesIntegrationTest extends TestCase
         ]);
 
         // Filter category khusus
-        $resFilter = $this->actingAs($this->admin)->get('/schedules?category=khusus');
+        $resFilter = $this->actingAs($this->admin)->get('/admin/schedules?category=khusus');
         $resFilter->assertStatus(200);
         $resFilter->assertSee('Apel Peringatan Dies Natalis');
         $resFilter->assertDontSee('Apel Rutin Senin Pagi');
 
         // Cancel schedule
-        $cancelRes = $this->actingAs($this->admin)->post("/schedules/{$schedRutin->id}/cancel", [
+        $cancelRes = $this->actingAs($this->admin)->post("/admin/schedules/{$schedRutin->id}/cancel", [
             'reason' => 'Cuaca hujan lebat di lapangan',
         ]);
 
@@ -269,13 +269,13 @@ class IaFeaturesIntegrationTest extends TestCase
         ]);
 
         // Filter by class_group
-        $resFilter = $this->actingAs($this->admin)->get('/presensi/riwayat?class_group=MI-3A');
+        $resFilter = $this->actingAs($this->admin)->get('/admin/presensi/riwayat?class_group=MI-3A');
         $resFilter->assertStatus(200);
         $resFilter->assertSee('Mahasiswa Kelas A');
         $resFilter->assertDontSee('Mahasiswa Kelas B');
 
         // Test CSV / Excel Export
-        $exportRes = $this->actingAs($this->admin)->get('/reports/export-csv?class_group=MI-3A');
+        $exportRes = $this->actingAs($this->admin)->get('/admin/reports/export-csv?class_group=MI-3A');
         $exportRes->assertStatus(200);
         $exportRes->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
     }

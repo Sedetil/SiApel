@@ -79,7 +79,7 @@ class ApelScheduleController extends Controller
             entityId: $schedule->id
         );
 
-        return redirect()->route('schedules.index')->with('status', 'Jadwal apel berhasil dibuat.');
+        return redirect()->route('admin.schedules.index')->with('status', 'Jadwal apel berhasil dibuat.');
     }
 
     public function edit(ApelSchedule $schedule): View
@@ -112,17 +112,14 @@ class ApelScheduleController extends Controller
             entityId: $schedule->id
         );
 
-        return redirect()->route('schedules.index')->with('status', 'Jadwal apel berhasil diperbarui.');
+        return redirect()->route('admin.schedules.index')->with('status', 'Jadwal apel berhasil diperbarui.');
     }
 
     public function cancel(Request $request, ApelSchedule $schedule): RedirectResponse
     {
         $reason = $request->input('reason', 'Dibatalkan oleh Administrator');
 
-        $schedule->update([
-            'status' => 'cancelled',
-            'description' => $schedule->description ? ($schedule->description." [Catatan Pembatalan: {$reason}]") : "Catatan Pembatalan: {$reason}",
-        ]);
+        $schedule->batalkanApel($reason);
 
         AuditLog::log(
             action: 'CANCEL_SCHEDULE',
@@ -174,6 +171,6 @@ class ApelScheduleController extends Controller
             entityId: $schedule->id
         );
 
-        return redirect()->route('schedules.index')->with('status', 'Jadwal apel berhasil dihapus.');
+        return redirect()->route('admin.schedules.index')->with('status', 'Jadwal apel berhasil dihapus.');
     }
 }

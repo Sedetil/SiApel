@@ -1,7 +1,7 @@
 <!-- SEARCH & FILTER SECTION (CARD PUTIH, LEBAR PENUH) -->
 <div class="bg-white rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.03)] p-6 space-y-5">
     
-    <form method="GET" action="{{ route('attendance.history') }}" class="space-y-4" id="attendance-filter-form">
+    <form method="GET" action="{{ role_route('attendance.history') }}" class="space-y-4" id="attendance-filter-form">
         
         <!-- Baris Atas: Input Forms (Grid/Flex) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-end">
@@ -100,13 +100,13 @@
             @endphp
 
             <!-- Semua 3520 (Biru Aktif) -->
-            <a href="{{ route('attendance.history', array_merge(request()->except('status', 'page'))) }}" 
+            <a href="{{ role_route('attendance.history', array_merge(request()->except('status', 'page'))) }}" 
                class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all {{ $isAll ? 'bg-[#2563eb] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-600' }}">
                 Semua <span class="{{ $isAll ? 'text-blue-100' : 'text-slate-500' }} ml-0.5">3520</span>
             </a>
 
             <!-- Hadir Tepat 436 (Dot Hijau) -->
-            <a href="{{ route('attendance.history', array_merge(request()->except('page'), ['status' => 'hadir'])) }}" 
+            <a href="{{ role_route('attendance.history', array_merge(request()->except('page'), ['status' => 'hadir'])) }}" 
                class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 {{ $currentStatus === 'hadir' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600' }}">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                 <span>Hadir Tepat</span>
@@ -114,7 +114,7 @@
             </a>
 
             <!-- Terlambat 32 (Dot Merah) -->
-            <a href="{{ route('attendance.history', array_merge(request()->except('page'), ['status' => 'terlambat'])) }}" 
+            <a href="{{ role_route('attendance.history', array_merge(request()->except('page'), ['status' => 'terlambat'])) }}" 
                class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 {{ $currentStatus === 'terlambat' ? 'bg-red-50 text-red-700 border border-red-200 font-semibold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600' }}">
                 <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
                 <span>Terlambat</span>
@@ -122,7 +122,7 @@
             </a>
 
             <!-- Sakit 4 (Dot Kuning) -->
-            <a href="{{ route('attendance.history', array_merge(request()->except('page'), ['status' => 'sakit'])) }}" 
+            <a href="{{ role_route('attendance.history', array_merge(request()->except('page'), ['status' => 'sakit'])) }}" 
                class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 {{ $currentStatus === 'sakit' ? 'bg-amber-50 text-amber-700 border border-amber-200 font-semibold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600' }}">
                 <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
                 <span>Sakit</span>
@@ -130,7 +130,7 @@
             </a>
 
             <!-- Tidak Hadir 8 (Dot Hitam/Gelap) -->
-            <a href="{{ route('attendance.history', array_merge(request()->except('page'), ['status' => 'alpa'])) }}" 
+            <a href="{{ role_route('attendance.history', array_merge(request()->except('page'), ['status' => 'alpa'])) }}" 
                class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 {{ in_array($currentStatus, ['alpa', 'tidak_hadir']) ? 'bg-slate-800 text-white font-semibold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600' }}">
                 <span class="w-2 h-2 rounded-full bg-slate-800 shrink-0"></span>
                 <span>Tidak Hadir</span>
