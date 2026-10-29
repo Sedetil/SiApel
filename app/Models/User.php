@@ -353,5 +353,4 @@ class User extends Authenticatable
 
         return [$val];
     }
-    }
 }

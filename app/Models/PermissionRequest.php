@@ -243,5 +243,4 @@ class PermissionRequest extends Model
             $q->forUser($user);
         });
     }
-    }
 }

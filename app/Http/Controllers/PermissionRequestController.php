@@ -207,7 +207,6 @@ class PermissionRequestController extends Controller
         } else {
             $permissionRequest->tolak($validated['notes'] ?? 'Ditolak oleh '.$user->name, $user->id);
         }
-        }
 
         AuditLog::log(
             action: 'DECIDE_PERMISSION',
