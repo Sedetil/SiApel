@@ -1,13 +1,13 @@
 import os
 from pathlib import Path
 
-# Konfigurasi MySQL Lokal untuk Python
+# Konfigurasi MySQL Lokal untuk Python (Database lokal terpisah agar tidak bentrok dengan tabel `mahasiswa` Laravel)
 MYSQL_CONFIG = {
     'host': os.getenv('PYTHON_DB_HOST', '127.0.0.1'),
     'port': int(os.getenv('PYTHON_DB_PORT', '3306')),
     'user': os.getenv('PYTHON_DB_USER', 'root'),
     'password': os.getenv('PYTHON_DB_PASSWORD', ''),
-    'database': os.getenv('PYTHON_DB_DATABASE', 'siapel_db'),
+    'database': os.getenv('PYTHON_DB_DATABASE', 'siapel_local'),
     'charset': 'utf8mb4',
     'collation': 'utf8mb4_unicode_ci'
 }

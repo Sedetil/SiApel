@@ -76,6 +76,15 @@
         }
 
         @media (min-width: 1024px) {
+            #app-sidebar {
+                width: 256px;
+                transform: translateX(0) !important;
+            }
+
+            #main-wrapper {
+                padding-left: 256px;
+            }
+
             html.sidebar-collapsed #app-sidebar,
             #app-sidebar.sidebar-collapsed {
                 width: 72px !important;

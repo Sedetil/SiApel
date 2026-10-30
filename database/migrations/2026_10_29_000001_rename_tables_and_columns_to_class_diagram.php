@@ -59,6 +59,10 @@ return new class extends Migration
 
         // 3. Rename columns and table: participants -> mahasiswa
         if (Schema::hasTable('participants')) {
+            // Hapus tabel cache lokal Python `mahasiswa` (yang memiliki kolom qr_code_id) jika sempat terbuat di database utama
+            if (Schema::hasTable('mahasiswa') && Schema::hasColumn('mahasiswa', 'qr_code_id')) {
+                Schema::dropIfExists('mahasiswa');
+            }
             if (Schema::hasColumn('participants', 'id')) {
                 DB::statement('ALTER TABLE `participants` CHANGE COLUMN `id` `id_mahasiswa` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT');
             }

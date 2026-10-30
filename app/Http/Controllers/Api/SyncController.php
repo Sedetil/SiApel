@@ -75,7 +75,8 @@ class SyncController extends Controller
                 ->orderBy('name', 'asc')
                 ->get()
                 ->map(function (Participant $participant) {
-                    $qrCodeId = $participant->activeRfidCard?->card_uid ?: $participant->identifier;
+                    $qrCodeId = $participant->kode_qr
+                        ?: ($participant->activeRfidCard?->card_uid ?: $participant->identifier);
 
                     return [
                         'id' => $participant->identifier,
@@ -250,10 +251,12 @@ class SyncController extends Controller
                 $cleanIdentifier = preg_replace('/[^a-zA-Z0-9\-_]/', '', $rawIdentifier);
                 $withoutQrPrefix = preg_replace('/^(QR-|-)/i', '', $cleanIdentifier);
 
-                // Cari peserta berdasarkan identifier (NPM), ID, atau UID kartu/QR
+                // Cari peserta berdasarkan identifier (NPM), kode_qr, ID, atau UID kartu/QR
                 $participant = Participant::with('activeRfidCard')
                     ->where('identifier', $cleanIdentifier)
                     ->orWhere('identifier', $withoutQrPrefix)
+                    ->orWhere('kode_qr', $rawIdentifier)
+                    ->orWhere('kode_qr', $cleanIdentifier)
                     ->orWhereHas('rfidCards', function ($q) use ($cleanIdentifier, $withoutQrPrefix) {
                         $q->whereIn('card_uid', [$cleanIdentifier, $withoutQrPrefix])
                             ->where('is_active', true);
