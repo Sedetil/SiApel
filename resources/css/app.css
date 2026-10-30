@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+  /* Font Families */
+  --font-sans: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* Colors - Brand & Primary */
+  --color-primary: #2D56FF;
+  --color-primary-dark: #1B37B9;
+  --color-accent: #4D7BFF;
+
+  /* Colors - Surface & Neutral */
+  --color-background: #F4F6FC;
+  --color-surface: #FFFFFF;
+  --color-border: #D9D9D9;
+  --color-text-primary: #0F1729;
+  --color-text-secondary: #6B7A90;
+
+  /* Colors - Semantic Status */
+  --color-success: #22C55E;
+  --color-warning: #F5A623;
+  --color-error: #FF0004;
+
+  /* Border Radius Context */
+  --radius-sm: 6px;    /* Kecil: Badge/Tag */
+  --radius-md: 8px;    /* Kontrol: Button/Input */
+  --radius-lg: 12px;   /* Kartu: Card/Modal */
+  --radius-xl: 16px;   /* Panel: Sheet/Drawer */
+}
+
+/* Firefox Standard */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* WebKit (Chrome, Edge, Safari, Opera) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Ultra-Sleek Scrollbar for Sidebar & Internal Elements */
+#app-sidebar *::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+#app-sidebar *::-webkit-scrollbar-thumb {
+  background-color: #e2e8f0;
+  border-radius: 9999px;
+}
+
+#app-sidebar *::-webkit-scrollbar-thumb:hover {
+  background-color: #cbd5e1;
+}
+
+/* Smooth Table & Modal Scrollbars */
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb,
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover,
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* Utility to hide scrollbar if ever needed */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Presensi QR Scanner (Python Lokal) — SIABSEN POLINELA</title>
+    <link rel="stylesheet" href="/static/css/monitor.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="monitor-layout">
+        <!-- Left: QR Scanner Operational Section -->
+        <div class="scanner-section">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <span class="material-symbols-outlined">qr_code_scanner</span>
+                    </div>
+                    <div class="logo-text">
+                        <div class="logo-title">SIABSEN POLINELA</div>
+                        <div class="logo-sub">Sistem Presensi Apel — Alat Scanner QR Lokal (Python)</div>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <div class="clock" id="clock">--:--:--</div>
+                    <div id="date-label">Memuat tanggal...</div>
+                </div>
+                <div class="header-right">
+                    <div class="status-badge">
+                        <div class="status-dot"></div>
+                        <span>QR SCANNER READY</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Row (IBM Plex Mono 32px Bold sesuai StyleGuide.md) -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <span class="material-symbols-outlined">groups</span>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">Total Peserta Hadir</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <span class="material-symbols-outlined">check_circle</span>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-tepat">0</div>
+                        <div class="stat-label">Hadir Tepat Waktu</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon amber">
+                        <span class="material-symbols-outlined">schedule</span>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-terlambat">0</div>
+                        <div class="stat-label">Terlambat</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toolbar: Sesi Apel, Koneksi Alat Scanner QR, dan Sync Master Data -->
+            <div class="control-bar">
+                <div class="control-group">
+                    <span class="material-symbols-outlined control-icon">event_note</span>
+                    <select id="kegiatan-select" class="control-select">
+                        <option value="">Otomatis: Jadwal Apel Aktif Hari Ini</option>
+                    </select>
+                </div>
+
+                <!-- Indikator & Tombol Alat Scanner QR Fisik -->
+                <button id="scanner-indicator" onclick="connectSerialScanner()" class="btn-scanner-status">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">usb</span>
+                    <span id="scanner-status-text">Scanner USB Aktif (Klik untuk Serial COM)</span>
+                </button>
+
+                <!-- Tombol Sync Master Data dari Server Online ke MySQL Lokal -->
+                <button onclick="showSyncMasterDataDialog()" class="btn-sync-master">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">cloud_download</span>
+                    <span>Sync Master Data</span>
+                </button>
+
+                <!-- Info Jadwal Apel Aktif di Lokal -->
+                <div class="schedule-banner" id="active-schedule-banner">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">verified</span>
+                    <span id="active-schedule-text">Memeriksa jadwal apel di database lokal...</span>
+                </div>
+            </div>
+
+            <!-- Main QR Scanner Station Area (Tanpa Kamera/CCTV) -->
+            <div class="scanner-workspace">
+                <!-- Kartu Status Alat Scanner QR & Input Cepat -->
+                <div class="scanner-station-card">
+                    <div class="scanner-visual-ring" id="scanner-visual-ring">
+                        <span class="material-symbols-outlined scanner-hero-icon">qr_code_2</span>
+                    </div>
+                    <h2 class="scanner-station-title">Arahkan QR Code ke Alat Scanner</h2>
+                    <p class="scanner-station-desc">
+                        Alat Scanner QR (USB HID / Serial COM) otomatis membaca kode QR mahasiswa secara instan tanpa perlu mengklik kolom input.
+                    </p>
+
+                    <!-- Form Input / Scan QR Manual Cadangan -->
+                    <form id="manual-qr-form" onsubmit="handleManualQrSubmit(event)" class="manual-qr-form">
+                        <div class="input-wrapper">
+                            <span class="material-symbols-outlined input-icon">qr_code_scanner</span>
+                            <input
+                                type="text"
+                                id="manual-qr-input"
+                                placeholder="Siap menerima tembakan Alat Scanner QR atau ketik NPM / Kode QR..."
+                                autocomplete="off"
+                            />
+                        </div>
+                        <button type="submit" class="btn-submit-qr">
+                            Proses QR
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Kartu Hasil Pemindaian Terakhir -->
+                <div class="last-scan-card" id="last-scan-card">
+                    <div class="last-scan-header">
+                        <span class="last-scan-label">HASIL PEMINDAIAN TERAKHIR</span>
+                        <span class="last-scan-time" id="last-scan-time">--:--:--</span>
+                    </div>
+                    <div class="last-scan-body" id="last-scan-body">
+                        <div class="last-scan-empty">
+                            <span class="material-symbols-outlined" style="font-size: 40px; color: #94a3b8;"> badge </span>
+                            <p>Belum ada peserta yang dipindai pada sesi ini.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Local Attendance Queue & Push to Online DB -->
+        <div class="log-section">
+            <div class="log-header">
+                <div class="log-header-top">
+                    <h2>Antrean Presensi Lokal</h2>
+                    <span class="log-count" id="log-count">0</span>
+                </div>
+                <p>Disimpan di lokal & siap di-push ke Server Database Online</p>
+
+                <div class="sync-action-row">
+                    <button id="sync-button" onclick="syncDataToServer()" class="btn-push-server">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">cloud_upload</span>
+                        <span>Sync ke Server</span>
+                    </button>
+                    <button onclick="clearLocalData()" class="btn-clear-local" title="Bersihkan antrean lokal">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                        <span>Clear</span>
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="log-tabs">
+                    <button id="tab-pending" onclick="switchMonitorTab('pending')" class="tab-btn active">
+                        Belum Sync (<span id="pending-count-badge">0</span>)
+                    </button>
+                    <button id="tab-history" onclick="switchMonitorTab('history')" class="tab-btn">
+                        Sudah Sync (<span id="synced-count-badge">0</span>)
+                    </button>
+                </div>
+            </div>
+
+            <div class="log-list" id="recent-scans">
+                <div class="empty-state">
+                    <span class="material-symbols-outlined" style="font-size: 40px; opacity: 0.35;">qr_code_scanner</span>
+                    <p>Belum ada presensi baru yang menunggu sinkronisasi</p>
+                </div>
+            </div>
+
+            <div class="log-footer">
+                <div class="footer-info">Server Target: <strong id="target-server-label">http://127.0.0.1:8000</strong></div>
+                <div class="polling-indicator">
+                    <span class="polling-dot" id="polling-dot"></span>
+                    <span id="last-update">Lokal Aktif</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="toast-notification">
+        <div class="toast-content">
+            <span class="material-symbols-outlined toast-icon">check_circle</span>
+            <div class="toast-message">
+                <div class="toast-title">Informasi Presensi</div>
+                <div class="toast-text" id="toast-text">Tersimpan di lokal</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/sync_master.js"></script>
+    <script src="/static/js/monitor.js"></script>
+</body>
+</html>
+
