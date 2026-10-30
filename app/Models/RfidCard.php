@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\MapsLegacyColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,9 +10,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RfidCard extends Model
 {
-    use HasFactory;
+    use HasFactory, MapsLegacyColumns;
+
+    protected array $legacyColumnAliases = [
+        'participant_id' => 'id_mahasiswa',
+    ];
 
     protected $fillable = [
+        'id_mahasiswa',
         'participant_id',
         'card_uid',
         'is_active',
@@ -29,9 +35,24 @@ class RfidCard extends Model
         ];
     }
 
+    public function getParticipantIdAttribute(): ?int
+    {
+        return isset($this->attributes['id_mahasiswa']) ? (int) $this->attributes['id_mahasiswa'] : null;
+    }
+
+    public function setParticipantIdAttribute($value): void
+    {
+        $this->attributes['id_mahasiswa'] = $value;
+    }
+
     public function participant(): BelongsTo
     {
-        return $this->belongsTo(Participant::class);
+        return $this->belongsTo(Participant::class, 'id_mahasiswa');
+    }
+
+    public function mahasiswa(): BelongsTo
+    {
+        return $this->participant();
     }
 
     public function attendanceRecords(): HasMany

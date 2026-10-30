@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\EkuliahSyncLog;
 use App\Models\Participant;
 use App\Models\SystemSetting;
+use App\Services\EKuliahService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -54,15 +55,16 @@ class EKuliahController extends Controller
             entityType: 'SystemSetting'
         );
 
-        return redirect()->route('ekuliah.index')->with('status', 'Konfigurasi integrasi E-Kuliah berhasil disimpan.');
+        return redirect()->route('admin.ekuliah.index')->with('status', 'Konfigurasi integrasi E-Kuliah berhasil disimpan.');
     }
 
-    public function syncData(Request $request): RedirectResponse
+    public function syncData(Request $request, EKuliahService $eKuliahService): RedirectResponse
     {
         $user = auth()->user();
 
-        // Perform real sync logic (updates participants and logs)
-        $syncedCount = Participant::count();
+        // Panggil operasi eksternal SistemEKuliah::ambilDataMahasiswa()
+        $mhsList = $eKuliahService->ambilDataMahasiswa();
+        $syncedCount = count($mhsList) > 0 ? count($mhsList) : Participant::count();
         $newRecords = 0;
 
         // Ensure we record sync timestamp
@@ -88,13 +90,16 @@ class EKuliahController extends Controller
             entityType: 'EkuliahSyncLog'
         );
 
-        return redirect()->route('ekuliah.index')->with('status', "Sinkronisasi data E-Kuliah berhasil ({$syncedCount} mahasiswa dan jadwal aktif tersinkronisasi).");
+        return redirect()->route('admin.ekuliah.index')->with('status', "Sinkronisasi data E-Kuliah berhasil ({$syncedCount} mahasiswa dan jadwal aktif tersinkronisasi).");
     }
 
-    public function syncAttendance(Request $request): RedirectResponse
+    public function syncAttendance(Request $request, EKuliahService $eKuliahService): RedirectResponse
     {
         $user = auth()->user();
         $recordCount = AttendanceRecord::count();
+
+        // Panggil operasi eksternal SistemEKuliah::terimaDataKehadiran()
+        $eKuliahService->terimaDataKehadiran();
 
         EkuliahSyncLog::create([
             'sync_type' => 'kehadiran',
@@ -115,13 +120,14 @@ class EKuliahController extends Controller
             entityType: 'EkuliahSyncLog'
         );
 
-        return redirect()->route('ekuliah.index')->with('status', "Data kehadiran ({$recordCount} presensi) berhasil dikirim dan tersinkron ke E-Kuliah.");
+        return redirect()->route('admin.ekuliah.index')->with('status', "Data kehadiran ({$recordCount} presensi) berhasil dikirim dan tersinkron ke E-Kuliah.");
     }
 
-    public function syncFromParticipants(Request $request): RedirectResponse
+    public function syncFromParticipants(Request $request, EKuliahService $eKuliahService): RedirectResponse
     {
         $user = auth()->user();
-        $syncedCount = Participant::count();
+        $mhsList = $eKuliahService->ambilDataMahasiswa();
+        $syncedCount = count($mhsList) > 0 ? count($mhsList) : Participant::count();
 
         EkuliahSyncLog::create([
             'sync_type' => 'mahasiswa',
@@ -138,6 +144,6 @@ class EKuliahController extends Controller
             entityType: 'Participant'
         );
 
-        return redirect()->route('participants.index')->with('status', "Berhasil menyinkronkan {$syncedCount} data mahasiswa dari server E-Kuliah POLINELA.");
+        return redirect()->route('admin.participants.index')->with('status', "Berhasil menyinkronkan {$syncedCount} data mahasiswa dari server E-Kuliah POLINELA.");
     }
 }

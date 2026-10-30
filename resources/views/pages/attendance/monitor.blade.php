@@ -16,29 +16,18 @@
                 </span>
             </div>
             <p class="text-[13px] text-text-secondary mt-1">
-                Pemantauan langsung aliran absensi apel mahasiswa dari pemindaian kartu RFID (perangkat utama) maupun sinkronisasi Alat Scanner QR Lokal (Python) secara real-time.
+                Pemantauan langsung aliran absensi apel mahasiswa dari pemindaian reader RFID secara real-time.
             </p>
         </div>
 
-        <!-- Session Selector & Local Python QR Scanner Link -->
-        <div class="flex flex-wrap items-center gap-3">
-            <a 
-                href="http://127.0.0.1:5000/monitor" 
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-md text-[12px] font-bold shadow-sm transition-colors"
-                title="Buka Sistem Presensi Alat Scanner QR Lokal (Python port 5000)"
-            >
-                <i data-lucide="qr-code" class="w-4 h-4"></i>
-                <span>Buka QR Scanner Lokal (Python)</span>
-            </a>
-
+        <!-- Session Selector & Auto Refresh Toggle -->
+        <div class="flex items-center gap-3">
             <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border rounded-md text-[12px] text-text-secondary">
                 <span id="feed-status-dot" class="w-2 h-2 rounded-full bg-success"></span>
                 <span>Pembaruan: <strong id="last-sync-time" class="font-mono text-text-primary">Langsung</strong></span>
             </div>
 
-            <form method="GET" action="{{ route('attendance.monitor') }}" class="flex items-center gap-2">
+            <form method="GET" action="{{ role_route('attendance.monitor') }}" class="flex items-center gap-2">
                 <select 
                     id="schedule_id" 
                     name="schedule_id" 
@@ -257,7 +246,7 @@
                                     <td class="py-3 px-4 text-center">
                                         @if($rec->participant_id)
                                             <a 
-                                                href="{{ route('participants.show', $rec->participant_id) }}" 
+                                                href="{{ role_route('participants.show', $rec->participant_id) }}" 
                                                 class="text-primary hover:text-primary-dark font-medium text-[11px] inline-flex items-center gap-1"
                                                 title="Lihat Detail Peserta"
                                             >
@@ -282,7 +271,7 @@
 
                 <div class="px-5 py-3 border-t border-border bg-background/30 flex items-center justify-between text-[11px] text-text-secondary">
                     <span>Otomatis memuat data terbaru setiap 4 detik</span>
-                    <a href="{{ route('attendance.history', ['schedule_id' => $schedule->id]) }}" class="text-primary hover:underline font-medium">
+                    <a href="{{ role_route('attendance.history', ['schedule_id' => $schedule->id]) }}" class="text-primary hover:underline font-medium">
                         Lihat Seluruh Riwayat Sesi &rarr;
                     </a>
                 </div>
@@ -297,7 +286,7 @@
 @push('scripts')
 <script>
     const scheduleId = {{ $schedule->id }};
-    const liveFeedUrl = "{{ route('attendance.live-feed') }}";
+    const liveFeedUrl = "{{ role_route('attendance.live-feed') }}";
     let isPolling = true;
 
     async function fetchLiveFeed() {
@@ -364,7 +353,7 @@
                             ? `<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-[10px] font-bold bg-warning/10 text-warning border border-warning/20">TERLAMBAT</span>`
                             : `<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-[10px] font-bold bg-error/10 text-error border border-error/20">${rec.status.toUpperCase()}</span>`);
 
-                    const detailUrl = `/participants/${rec.participant_id}`;
+                    const detailUrl = "{{ url((auth()->check() && auth()->user()->isAdmin()) ? 'admin/participants' : 'timdis/participants') }}/" + rec.participant_id;
 
                     return `
                         <tr class="hover:bg-background/60 transition-colors" data-record-id="${rec.id}">

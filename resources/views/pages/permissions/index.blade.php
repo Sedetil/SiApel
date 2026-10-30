@@ -45,53 +45,96 @@
     function openDetailModal(req) {
         if (!req) return;
 
-        const studentName = req.participant ? req.participant.name : (req.name || '-');
-        const studentNpm = req.participant 
-            ? (req.participant.identifier + ' • ' + (req.participant.study_program || '-')) 
-            : ((req.npm ? req.npm + ' • ' : '') + (req.program || '-'));
+        const studentName = req.participant ? req.participant.name : (req.name || 'Yoga Saputra');
+        const studentProgram = req.participant 
+            ? (req.participant.study_program || 'Teknologi Rekayasa Perangkat Lunak') 
+            : (req.program || 'Teknologi Rekayasa Perangkat Lunak');
 
+        const nameParts = studentName.trim().split(' ');
+        let initials = (nameParts[0] ? nameParts[0][0] : 'Y') + (nameParts[1] ? nameParts[1][0] : 'S');
+        initials = initials.toUpperCase();
+
+        document.getElementById('modal-avatar').textContent = initials;
         document.getElementById('modal-student-name').textContent = studentName;
-        document.getElementById('modal-student-npm').textContent = studentNpm;
+        document.getElementById('modal-student-program').textContent = studentProgram;
         
+        const profileLink = document.getElementById('modal-profile-link');
+        const participantId = req.participant_id || (req.participant ? req.participant.id : null);
+        profileLink.href = participantId ? `/participants/${participantId}` : '#';
+
         const type = (req.type || 'sakit').toLowerCase();
-        const typeBadge = document.getElementById('modal-type-badge');
-        typeBadge.textContent = type.toUpperCase();
-        typeBadge.className = type === 'sakit' 
-            ? 'px-2.5 py-1 rounded text-[11px] font-bold bg-amber-100 text-amber-800' 
-            : 'px-2.5 py-1 rounded text-[11px] font-bold bg-indigo-100 text-indigo-800';
+        document.getElementById('modal-type-label').textContent = type === 'sakit' ? 'Izin Sakit' : 'Izin Keperluan';
 
-        document.getElementById('modal-schedule').textContent = req.schedule 
-            ? `${req.schedule.title} (${req.schedule.schedule_date})` 
-            : 'Apel Kedisiplinan Polinela';
+        const scheduleTitle = req.schedule ? req.schedule.title : 'Apel di hari senin';
+        const scheduleDate = req.schedule && req.schedule.schedule_date 
+            ? req.schedule.schedule_date 
+            : (req.date_range || 'Minggu, 21 Oktober 2026');
+        
+        document.getElementById('modal-schedule-title').textContent = scheduleTitle;
+        document.getElementById('modal-schedule-date').textContent = scheduleDate;
 
-        document.getElementById('modal-reason').textContent = req.reason || 'Demam tinggi dan istirahat dokter sesuai rekomendasi.';
+        document.getElementById('modal-reason').textContent = req.reason || 'Selamat pagi, mohon izin menyampaikan bahwa hari ini saya tidak dapat mengikuti apel dikarenakan kondisi badan sedang kurang sehat/sakit. Mohon izin untuk beristirahat. Terima kasih.';
         
         const attachName = document.getElementById('modal-attachment-name');
-        attachName.textContent = req.attachment_path || (req.attachment || 'surat_keterangan_sakit.pdf');
+        const attachLink = document.getElementById('modal-attachment-link');
+        const hasAttach = req.attachment_path || req.attachment;
+        if (hasAttach) {
+            attachName.textContent = req.attachment_path || req.attachment;
+            attachLink.classList.remove('hidden');
+            attachLink.href = `/storage/${req.attachment_path || req.attachment}`;
+        } else {
+            attachName.textContent = 'Tidak ada lampiran yang disertakan.';
+            attachLink.classList.add('hidden');
+        }
 
-        const decisionBox = document.getElementById('modal-decision-box');
-        const decisionStatus = document.getElementById('modal-decision-status');
-        const decisionDate = document.getElementById('modal-decision-date');
-        const decisionNotes = document.getElementById('modal-decision-notes');
-        const decisionOfficer = document.getElementById('modal-decision-officer');
+        const status = (req.status || 'menunggu').toLowerCase();
+        const statusBadge = document.getElementById('modal-status-badge');
+        const statusText = document.getElementById('modal-status-text');
         const decisionForm = document.getElementById('modal-decision-form');
+        const actionButtons = document.getElementById('modal-action-buttons');
+        const footerCaption = document.getElementById('modal-footer-caption');
+        const notes = document.getElementById('modal-notes');
 
-        const status = req.status || 'menunggu';
-        decisionStatus.textContent = status.toUpperCase();
-        decisionDate.textContent = req.decided_at ? req.decided_at : '-';
-        decisionNotes.textContent = req.notes ? `"${req.notes}"` : (status === 'menunggu' ? 'Menunggu verifikasi oleh Timdis penanggung jawab.' : 'Tanpa catatan.');
-        decisionOfficer.textContent = req.decider ? `Diverifikasi oleh: ${req.decider.name}` : 'Penanggung jawab: Petugas Timdis';
+        statusText.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        notes.value = req.notes || '';
+
+        const timelineApplicant = document.getElementById('modal-timeline-applicant');
+        const timelineTime = document.getElementById('modal-timeline-time');
+        const timelineDecision = document.getElementById('modal-timeline-decision');
+        const timelineDot = document.getElementById('modal-timeline-decision-dot');
+        const timelineText = document.getElementById('modal-timeline-decision-text');
+
+        timelineApplicant.textContent = `Diajukan oleh ${studentName}`;
+        timelineTime.textContent = req.submit_time || '20 Okt 2026 · 16.30 WIB';
 
         if (status === 'menunggu') {
-            decisionBox.className = 'p-3 rounded-lg border border-amber-200 bg-amber-50/50 text-[12px] space-y-1';
-            decisionForm.classList.remove('hidden');
+            statusBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/90';
+            timelineDot.className = 'w-2 h-2 rounded-full bg-amber-500 shrink-0';
+            timelineText.className = 'text-amber-700 font-medium';
+            timelineText.textContent = 'Menunggu persetujuan Admin SDM';
+
             decisionForm.action = req.id ? `/izin-sakit/${req.id}/decide` : '#';
+            actionButtons.classList.remove('hidden');
+            footerCaption.classList.remove('hidden');
+            notes.removeAttribute('readonly');
         } else if (status === 'disetujui') {
-            decisionBox.className = 'p-3 rounded-lg border border-emerald-200 bg-emerald-50/50 text-[12px] space-y-1';
-            decisionForm.classList.add('hidden');
+            statusBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/90';
+            timelineDot.className = 'w-2 h-2 rounded-full bg-emerald-500 shrink-0';
+            timelineText.className = 'text-emerald-700 font-medium';
+            timelineText.textContent = `Disetujui oleh ${req.decider ? req.decider.name : 'Admin Timdis'}`;
+
+            actionButtons.classList.add('hidden');
+            footerCaption.classList.add('hidden');
+            notes.setAttribute('readonly', 'readonly');
         } else {
-            decisionBox.className = 'p-3 rounded-lg border border-red-200 bg-red-50/50 text-[12px] space-y-1';
-            decisionForm.classList.add('hidden');
+            statusBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-red-50 text-red-700 border border-red-200/90';
+            timelineDot.className = 'w-2 h-2 rounded-full bg-red-500 shrink-0';
+            timelineText.className = 'text-red-700 font-medium';
+            timelineText.textContent = `Ditolak oleh ${req.decider ? req.decider.name : 'Admin Timdis'}`;
+
+            actionButtons.classList.add('hidden');
+            footerCaption.classList.add('hidden');
+            notes.setAttribute('readonly', 'readonly');
         }
 
         document.getElementById('detail-modal').classList.remove('hidden');

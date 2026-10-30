@@ -17,7 +17,7 @@
 
     <!-- Filter Card -->
     <div class="bg-surface border border-border rounded-lg p-5 shadow-sm">
-        <form method="GET" action="{{ route('audit-logs.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <form method="GET" action="{{ route('admin.audit-logs.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
                 <label for="search" class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1">Cari Deskripsi / User / IP</label>
                 <input 
@@ -45,7 +45,7 @@
                     <i data-lucide="search" class="w-4 h-4"></i>
                     <span>Filter</span>
                 </button>
-                <a href="{{ route('audit-logs.index') }}" class="bg-background hover:bg-border/40 text-text-secondary text-[13px] py-2 px-3 rounded-md transition-colors border border-border">
+                <a href="{{ route('admin.audit-logs.index') }}" class="bg-background hover:bg-border/40 text-text-secondary text-[13px] py-2 px-3 rounded-md transition-colors border border-border">
                     Reset
                 </a>
             </div>

@@ -113,7 +113,7 @@ class AttendanceApiController extends Controller
     public function scan(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'apel_schedule_id' => 'required|integer|exists:apel_schedules,id',
+            'apel_schedule_id' => 'required|integer|exists:apel,id_apel',
             'card_uid' => 'required|string|max:64',
             'scan_type' => 'nullable|string|in:check_in,check_out',
             'device_identifier' => 'nullable|string|max:100',

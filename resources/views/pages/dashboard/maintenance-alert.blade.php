@@ -15,8 +15,15 @@
         </div>
     </div>
 
+    @if(auth()->check() && auth()->user()->isAdmin())
     <button type="button" class="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-[11.5px] px-3.5 py-2 rounded-md transition-colors shrink-0 shadow-sm">
         Aktifkan Maintenance
     </button>
+    @else
+    <span class="bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-semibold text-[11px] px-3 py-1.5 rounded-md shrink-0 flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        Server Online
+    </span>
+    @endif
 
 </div>

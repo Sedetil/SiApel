@@ -8,6 +8,7 @@ use App\Models\Participant;
 use App\Models\PermissionRequest;
 use App\Models\SystemSetting;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 class IaFeaturesSeeder extends Seeder
@@ -43,12 +44,35 @@ class IaFeaturesSeeder extends Seeder
         ApelSchedule::where('title', 'like', '%Khusus%')->update(['category' => 'khusus']);
 
         // 4. Sample Permission Requests (Izin & Sakit)
+        $yoga = Participant::firstOrCreate(
+            ['identifier' => '24572001'],
+            [
+                'name' => 'Yoga Saputra',
+                'study_program' => 'Teknologi Rekayasa Perangkat Lunak',
+                'class_group' => 'Kompi A - TRPL 1',
+                'is_active' => true,
+            ]
+        );
+
         $schedule = ApelSchedule::latest('schedule_date')->first();
-        $participants = Participant::take(8)->get();
+        $participants = Participant::where('id', '!=', $yoga->id)->take(8)->get();
         $timdisUsers = User::whereIn('role', ['timdis', 'petugas'])->get();
         $decider = $timdisUsers->first() ?? $admin;
 
-        if ($participants->count() >= 3) {
+        // Yoga Saputra (Sesuai Desain Mockup Screenshot)
+        PermissionRequest::updateOrCreate([
+            'participant_id' => $yoga->id,
+        ], [
+            'apel_schedule_id' => $schedule?->id,
+            'type' => 'sakit',
+            'reason' => 'Selamat pagi, mohon izin menyampaikan bahwa hari ini saya tidak dapat mengikuti apel dikarenakan kondisi badan sedang kurang sehat/sakit. Mohon izin untuk beristirahat. Terima kasih.',
+            'attachment_path' => null,
+            'status' => 'menunggu',
+            'notes' => null,
+            'created_at' => Carbon::parse('2026-10-20 16:30:00'),
+        ]);
+
+        if ($participants->count() >= 2) {
             // Pending Requests
             PermissionRequest::firstOrCreate([
                 'participant_id' => $participants[0]->id,

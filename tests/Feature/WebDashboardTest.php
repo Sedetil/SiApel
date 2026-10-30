@@ -53,8 +53,19 @@ class WebDashboardTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $response->assertRedirect('/dashboard');
+        $response->assertRedirect('/admin/dashboard');
         $this->assertAuthenticatedAs($this->admin);
+    }
+
+    public function test_officer_can_login_via_web_and_redirects_to_timdis_dashboard(): void
+    {
+        $response = $this->post('/login', [
+            'identifier' => 'petugas_test_web',
+            'password' => 'password123',
+        ]);
+
+        $response->assertRedirect('/timdis/dashboard');
+        $this->assertAuthenticatedAs($this->officer);
     }
 
     /**
@@ -62,13 +73,13 @@ class WebDashboardTest extends TestCase
      */
     public function test_officer_cannot_access_admin_modules(): void
     {
-        $response = $this->actingAs($this->officer)->get('/participants');
+        $response = $this->actingAs($this->officer)->get('/admin/participants');
         $response->assertStatus(403);
 
-        $resSched = $this->actingAs($this->officer)->get('/schedules');
+        $resSched = $this->actingAs($this->officer)->get('/admin/schedules');
         $resSched->assertStatus(403);
 
-        $resOfficers = $this->actingAs($this->officer)->get('/officers');
+        $resOfficers = $this->actingAs($this->officer)->get('/admin/officers');
         $resOfficers->assertStatus(403);
     }
 
@@ -77,17 +88,17 @@ class WebDashboardTest extends TestCase
      */
     public function test_admin_can_create_participant(): void
     {
-        $response = $this->actingAs($this->admin)->post('/participants', [
+        $response = $this->actingAs($this->admin)->post('/admin/participants', [
             'identifier' => '22753099_WEB',
             'name' => 'Mahasiswa Baru Web',
             'study_program' => 'Manajemen Informatika',
             'class_group' => 'Kompi C',
         ]);
 
-        $response->assertRedirect('/participants');
-        $this->assertDatabaseHas('participants', [
-            'identifier' => '22753099_WEB',
-            'name' => 'Mahasiswa Baru Web',
+        $response->assertRedirect('/admin/participants');
+        $this->assertDatabaseHas('mahasiswa', [
+            'npm' => '22753099_WEB',
+            'nama' => 'Mahasiswa Baru Web',
         ]);
     }
 
@@ -101,7 +112,7 @@ class WebDashboardTest extends TestCase
             'name' => 'Mahasiswa Lama',
         ]);
 
-        $response = $this->actingAs($this->admin)->post('/participants', [
+        $response = $this->actingAs($this->admin)->post('/admin/participants', [
             'identifier' => '22753099_DUP',
             'name' => 'Mahasiswa Kembar',
         ]);
@@ -119,13 +130,13 @@ class WebDashboardTest extends TestCase
             'name' => 'Peserta Kartu Map',
         ]);
 
-        $response = $this->actingAs($this->admin)->post("/participants/{$participant->id}/map-rfid", [
+        $response = $this->actingAs($this->admin)->post("/admin/participants/{$participant->id}/map-rfid", [
             'card_uid' => 'UID_BARU_888_MAP',
         ]);
 
         $response->assertSessionHasNoErrors();
         $this->assertDatabaseHas('rfid_cards', [
-            'participant_id' => $participant->id,
+            'id_mahasiswa' => $participant->id,
             'card_uid' => 'UID_BARU_888_MAP',
             'is_active' => true,
         ]);
@@ -147,7 +158,7 @@ class WebDashboardTest extends TestCase
         ]);
 
         // Coba petakan kartu yang sama ke P2
-        $response = $this->actingAs($this->admin)->post("/participants/{$p2->id}/map-rfid", [
+        $response = $this->actingAs($this->admin)->post("/admin/participants/{$p2->id}/map-rfid", [
             'card_uid' => 'UID_SHARED_99',
         ]);
 
@@ -180,10 +191,10 @@ class WebDashboardTest extends TestCase
             'status' => 'hadir',
         ]);
 
-        $response = $this->actingAs($this->admin)->delete("/schedules/{$schedule->id}");
+        $response = $this->actingAs($this->admin)->delete("/admin/schedules/{$schedule->id}");
 
         $response->assertSessionHasErrors(['schedule']);
-        $this->assertDatabaseHas('apel_schedules', ['id' => $schedule->id]);
+        $this->assertDatabaseHas('apel', ['id_apel' => $schedule->id]);
     }
 
     /**
@@ -191,7 +202,7 @@ class WebDashboardTest extends TestCase
      */
     public function test_admin_can_export_csv(): void
     {
-        $response = $this->actingAs($this->admin)->get('/reports/export-csv');
+        $response = $this->actingAs($this->admin)->get('/admin/reports/export-csv');
 
         $response->assertStatus(200);
         $this->assertTrue(str_contains($response->headers->get('content-type'), 'text/csv'));
@@ -202,7 +213,7 @@ class WebDashboardTest extends TestCase
      */
     public function test_admin_can_view_pdf_report(): void
     {
-        $response = $this->actingAs($this->admin)->get('/reports/export-pdf');
+        $response = $this->actingAs($this->admin)->get('/admin/reports/export-pdf');
         $response->assertStatus(200);
         $response->assertSee('POLITEKNIK NEGERI LAMPUNG');
     }
@@ -257,7 +268,7 @@ class WebDashboardTest extends TestCase
             'status' => 'izin',
         ]);
 
-        $response = $this->actingAs($this->admin)->get("/dashboard?schedule_id={$schedule->id}");
+        $response = $this->actingAs($this->admin)->get("/admin/dashboard?schedule_id={$schedule->id}");
 
         $response->assertStatus(200);
         $response->assertViewHas('stats', function ($stats) {
@@ -278,7 +289,7 @@ class WebDashboardTest extends TestCase
     public function test_dashboard_attendance_trend_tabs_function_for_7_30_and_90_days(): void
     {
         // 1. Tab 7 hari
-        $res7 = $this->actingAs($this->admin)->get('/dashboard?trend_days=7');
+        $res7 = $this->actingAs($this->admin)->get('/admin/dashboard?trend_days=7');
         $res7->assertStatus(200);
         $res7->assertViewHas('trendDays', 7);
         $res7->assertSee('vs 7 hari sebelumnya');
@@ -287,7 +298,7 @@ class WebDashboardTest extends TestCase
         });
 
         // 2. Tab 30 hari
-        $res30 = $this->actingAs($this->admin)->get('/dashboard?trend_days=30');
+        $res30 = $this->actingAs($this->admin)->get('/admin/dashboard?trend_days=30');
         $res30->assertStatus(200);
         $res30->assertViewHas('trendDays', 30);
         $res30->assertSee('vs 30 hari sebelumnya');
@@ -296,12 +307,101 @@ class WebDashboardTest extends TestCase
         });
 
         // 3. Tab 90 hari
-        $res90 = $this->actingAs($this->admin)->get('/dashboard?trend_days=90');
+        $res90 = $this->actingAs($this->admin)->get('/admin/dashboard?trend_days=90');
         $res90->assertStatus(200);
         $res90->assertViewHas('trendDays', 90);
         $res90->assertSee('vs 90 hari sebelumnya');
         $res90->assertViewHas('trendData', function ($data) {
             return $data['days'] === 90 && count($data['points']) === 90;
+        });
+    }
+
+    /**
+     * Verifikasi dashboard untuk akun Timdis menampilkan data scope wilayah binaan
+     */
+    public function test_timdis_dashboard_shows_scoped_metrics_and_total_mahasiswa_saya(): void
+    {
+        $timdis = User::create([
+            'name' => 'Dosen Pembina TRPL',
+            'username' => 'timdis_test_trpl',
+            'email' => 'timdis_trpl_uji@polinela.ac.id',
+            'password' => Hash::make('password123'),
+            'role' => 'timdis',
+            'department' => 'Teknologi Informasi',
+            'study_program' => 'Teknologi Rekayasa Perangkat Lunak',
+            'class_group' => 'TRPL 1B',
+            'cohort_year' => '2025',
+            'is_active' => true,
+        ]);
+
+        // 2 Mahasiswa binaan Timdis
+        $mhs1 = Participant::create([
+            'identifier' => '25753001',
+            'name' => 'Binaan 1',
+            'department' => 'Teknologi Informasi',
+            'study_program' => 'Teknologi Rekayasa Perangkat Lunak',
+            'class_group' => 'TRPL 1B',
+            'cohort_year' => '2025',
+            'is_active' => true,
+        ]);
+        $mhs2 = Participant::create([
+            'identifier' => '25753002',
+            'name' => 'Binaan 2',
+            'department' => 'Teknologi Informasi',
+            'study_program' => 'Teknologi Rekayasa Perangkat Lunak',
+            'class_group' => 'TRPL 1B',
+            'cohort_year' => '2025',
+            'is_active' => true,
+        ]);
+
+        // 1 Mahasiswa di luar binaan
+        Participant::create([
+            'identifier' => '24751099',
+            'name' => 'Bukan Binaan',
+            'department' => 'Ekonomi dan Bisnis',
+            'study_program' => 'Akuntansi Perpajakan',
+            'class_group' => 'AKT 4B',
+            'cohort_year' => '2023',
+            'is_active' => true,
+        ]);
+
+        $schedule = ApelSchedule::create([
+            'title' => 'Apel Pagi TRPL',
+            'schedule_date' => Carbon::today()->format('Y-m-d'),
+            'category' => 'rutin',
+            'start_time' => '07:00:00',
+            'end_time' => '08:00:00',
+            'attendance_start' => '06:30:00',
+            'attendance_end' => '08:00:00',
+            'late_threshold_time' => '07:15:00',
+            'location' => 'Lapangan Apel POLINELA',
+            'latitude' => -5.358249,
+            'longitude' => 105.242784,
+            'radius_meters' => 100,
+            'status' => 'active',
+            'created_by' => $this->admin->id,
+        ]);
+
+        AttendanceRecord::create([
+            'apel_schedule_id' => $schedule->id,
+            'participant_id' => $mhs1->id,
+            'check_in_time' => Carbon::now(),
+            'status' => 'hadir',
+        ]);
+
+        $response = $this->actingAs($timdis)->get('/dashboard');
+
+        $response->assertStatus(200);
+        $response->assertSee('TOTAL MAHASISWA SAYA');
+        $response->assertSee('Hadir tepat waktu');
+        $response->assertSee('Hadir terlambat');
+        $response->assertSee('Tidak hadir');
+        $response->assertSee('Izin & sakit', false);
+        $response->assertViewHas('stats', function ($stats) {
+            return $stats['is_timdis'] === true &&
+                   $stats['total_participants'] === 2 &&
+                   $stats['session_hadir'] === 1 &&
+                   $stats['session_tidak_hadir'] === 1;
         });
     }
 }

@@ -20,6 +20,8 @@ class DashboardController extends Controller
     public function index(Request $request): View
     {
         $today = Carbon::today()->format('Y-m-d');
+        $user = auth()->user();
+        $isTimdis = $user && ! $user->isAdmin();
 
         // Jadwal aktif saat ini atau jadwal hari ini
         $activeSchedule = ApelSchedule::where('status', 'active')->first();
@@ -30,9 +32,12 @@ class DashboardController extends Controller
             $activeSchedule = ApelSchedule::latest('schedule_date')->first();
         }
 
-        // Metrik global
-        $totalParticipants = Participant::count();
-        $totalMappedCards = RfidCard::where('is_active', true)->count();
+        // Metrik global (scoped jika Timdis)
+        $totalParticipants = Participant::forUser($user)->count();
+        $totalMappedCards = RfidCard::where('is_active', true)
+            ->whereHas('participant', function ($q) use ($user) {
+                $q->forUser($user);
+            })->count();
         $totalSchedules = ApelSchedule::count();
 
         // Metrik sesi aktif / hari ini
@@ -55,6 +60,7 @@ class DashboardController extends Controller
 
         if ($selectedSchedule) {
             $records = AttendanceRecord::with(['participant', 'rfidCard'])
+                ->forUser($user)
                 ->where('apel_schedule_id', $selectedSchedule->id)
                 ->get();
 
@@ -79,13 +85,27 @@ class DashboardController extends Controller
             }
 
             $recentRecords = AttendanceRecord::with('participant')
+                ->forUser($user)
                 ->where('apel_schedule_id', $selectedSchedule->id)
                 ->orderBy('check_in_time', 'desc')
                 ->limit(8)
                 ->get();
         }
 
+        $scopeDescription = 'Aktif Terdaftar Dalam Sistem';
+        if ($isTimdis) {
+            $parts = array_filter([
+                $user->department,
+                $user->study_program,
+                $user->class_group,
+                $user->cohort_year ? 'Angkatan '.$user->cohort_year : null,
+            ]);
+            $scopeDescription = count($parts) > 0 ? implode(' • ', $parts) : 'Mahasiswa Binaan Saya';
+        }
+
         $stats = [
+            'is_timdis' => $isTimdis,
+            'scope_description' => $scopeDescription,
             'total_participants' => $totalParticipants,
             'total_cards' => $totalMappedCards,
             'total_schedules' => $totalSchedules,
@@ -110,9 +130,9 @@ class DashboardController extends Controller
                 'izin_sakit_pct' => round($izinRate + $sakitRate, 1),
                 'tidak_hadir_pct' => $tidakHadirRate,
             ],
-            'pending_permissions' => Schema::hasTable('permission_requests') ? PermissionRequest::where('status', 'menunggu')->count() : 0,
-            'pending_izin' => Schema::hasTable('permission_requests') ? PermissionRequest::where('status', 'menunggu')->where('type', 'izin')->count() : 0,
-            'pending_sakit' => Schema::hasTable('permission_requests') ? PermissionRequest::where('status', 'menunggu')->where('type', 'sakit')->count() : 0,
+            'pending_permissions' => (Schema::hasTable('pengajuan_izin') || Schema::hasTable('permission_requests')) ? PermissionRequest::forUser($user)->where('status', 'menunggu')->count() : 0,
+            'pending_izin' => (Schema::hasTable('pengajuan_izin') || Schema::hasTable('permission_requests')) ? PermissionRequest::forUser($user)->where('status', 'menunggu')->where('type', 'izin')->count() : 0,
+            'pending_sakit' => (Schema::hasTable('pengajuan_izin') || Schema::hasTable('permission_requests')) ? PermissionRequest::forUser($user)->where('status', 'menunggu')->where('type', 'sakit')->count() : 0,
             'total_admins' => User::where('role', 'admin')->count(),
             'total_timdis' => User::whereIn('role', ['timdis', 'petugas'])->count(),
         ];
@@ -143,7 +163,9 @@ class DashboardController extends Controller
             $trendStartDate->format('Y-m-d'),
             $trendEndDate->format('Y-m-d'),
         ])
-            ->with('attendanceRecords')
+            ->with(['attendanceRecords' => function ($q) use ($user) {
+                $q->forUser($user);
+            }])
             ->orderBy('schedule_date', 'asc')
             ->get();
 
@@ -156,7 +178,9 @@ class DashboardController extends Controller
             $prevTrendStartDate->format('Y-m-d'),
             $prevTrendEndDate->format('Y-m-d'),
         ])
-            ->with('attendanceRecords')
+            ->with(['attendanceRecords' => function ($q) use ($user) {
+                $q->forUser($user);
+            }])
             ->get();
 
         $prevRates = [];
@@ -314,23 +338,26 @@ class DashboardController extends Controller
         ];
 
         // Recent Permission Requests for Dashboard preview
-        $recentPermissions = Schema::hasTable('permission_requests')
-            ? PermissionRequest::with(['participant', 'decider'])->latest()->take(4)->get()
+        $recentPermissions = (Schema::hasTable('pengajuan_izin') || Schema::hasTable('permission_requests'))
+            ? PermissionRequest::forUser($user)->with(['participant', 'decider'])->latest()->take(4)->get()
             : collect();
 
-        // Upcoming and recent schedules
-        $upcomingSchedules = ApelSchedule::orderBy('schedule_date', 'desc')
-            ->take(3)
+        // Upcoming and recent schedules (order by schedule_date asc dari hari ini atau terdekat)
+        $upcomingSchedules = ApelSchedule::withCount(['attendanceRecords' => function ($q) use ($user) {
+            $q->forUser($user);
+        }])
+            ->orderBy('schedule_date', 'desc')
+            ->take(5)
             ->get();
 
         // Log scan terakhir
-        $recentEvents = AttendanceEvent::with(['participant', 'schedule'])
+        $recentEvents = AttendanceEvent::forUser($user)->with(['participant', 'schedule'])
             ->orderBy('id', 'desc')
             ->limit(6)
             ->get();
 
         // Breakdown per program studi untuk grafik/tabel ringkasan
-        $studyProgramBreakdown = Participant::active()
+        $studyProgramBreakdown = Participant::forUser($user)->active()
             ->select('study_program', DB::raw('count(*) as total'))
             ->groupBy('study_program')
             ->get();

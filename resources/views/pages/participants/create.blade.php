@@ -10,23 +10,23 @@
                 Tambah Peserta Apel
             </h1>
             <p class="text-[14px] text-text-secondary mt-1">
-                Daftarkan peserta apel baru dan petakan kartu RFID jika tersedia.
+                Daftarkan mahasiswa baru dan hubungkan ke struktur akademik kampus.
             </p>
         </div>
-        <a href="{{ route('participants.index') }}" class="text-[13px] font-medium text-text-secondary hover:text-text-primary">
+        <a href="{{ route('admin.participants.index') }}" class="text-[13px] font-medium text-text-secondary hover:text-text-primary">
             &larr; Kembali
         </a>
     </div>
 
     <!-- Form Card -->
     <div class="bg-surface border border-border rounded-lg p-6 sm:p-8 shadow-sm">
-        <form method="POST" action="{{ route('participants.store') }}" class="space-y-5">
+        <form method="POST" action="{{ route('admin.participants.store') }}" class="space-y-5">
             @csrf
 
-            <!-- NPM / Identifier -->
+            <!-- NPM Mahasiswa -->
             <div>
                 <label for="identifier" class="block text-[12px] font-bold text-text-primary uppercase tracking-wider mb-2">
-                    NPM / NIM Mahasiswa <span class="text-error">*</span>
+                    NPM Mahasiswa <span class="text-error">*</span>
                 </label>
                 <input 
                     type="text" 
@@ -61,34 +61,80 @@
                 @enderror
             </div>
 
-            <!-- Program Studi & Kelas Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="study_program" class="block text-[12px] font-bold text-text-primary uppercase tracking-wider mb-2">
-                        Program Studi / Jurusan
-                    </label>
-                    <input 
-                        type="text" 
-                        id="study_program" 
-                        name="study_program" 
-                        value="{{ old('study_program') }}" 
-                        placeholder="Contoh: Manajemen Informatika"
-                        class="w-full text-[13px] px-3.5 py-2.5 bg-surface border border-border rounded-md text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    >
+            <!-- Hierarki Akademik (Cascading Dropdowns dari Master) -->
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11.5px] font-bold text-slate-700 uppercase tracking-wider">
+                        Struktur Akademik Mahasiswa
+                    </span>
+                    <a href="{{ route('admin.academic-structures.index') }}" target="_blank" class="text-[11px] text-primary hover:underline">
+                        + Kelola Master Struktur
+                    </a>
                 </div>
 
-                <div>
-                    <label for="class_group" class="block text-[12px] font-bold text-text-primary uppercase tracking-wider mb-2">
-                        Kompi / Pleton / Kelas
-                    </label>
-                    <input 
-                        type="text" 
-                        id="class_group" 
-                        name="class_group" 
-                        value="{{ old('class_group') }}" 
-                        placeholder="Contoh: Kompi A - Pleton 1"
-                        class="w-full text-[13px] px-3.5 py-2.5 bg-surface border border-border rounded-md text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    >
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="department" class="block text-[11px] font-medium text-slate-600 mb-1.5">
+                            Jurusan
+                        </label>
+                        <select 
+                            id="department" 
+                            name="department" 
+                            onchange="updateProdiOptions()" 
+                            class="w-full text-[13px] px-3.5 py-2.5 bg-white border border-border rounded-md text-text-primary focus:outline-none focus:border-primary"
+                        >
+                            <option value="">-- Pilih Jurusan --</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->name }}" {{ old('department') === $dept->name ? 'selected' : '' }}>
+                                    {{ $dept->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="study_program" class="block text-[11px] font-medium text-slate-600 mb-1.5">
+                            Program Studi
+                        </label>
+                        <select 
+                            id="study_program" 
+                            name="study_program" 
+                            onchange="updateClassOptions()" 
+                            class="w-full text-[13px] px-3.5 py-2.5 bg-white border border-border rounded-md text-text-primary focus:outline-none focus:border-primary"
+                        >
+                            <option value="">-- Pilih Program Studi --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="class_group" class="block text-[11px] font-medium text-slate-600 mb-1.5">
+                            Kelas Mahasiswa
+                        </label>
+                        <select 
+                            id="class_group" 
+                            name="class_group" 
+                            onchange="updateCohortFromClass()" 
+                            class="w-full text-[13px] px-3.5 py-2.5 bg-white border border-border rounded-md text-text-primary focus:outline-none focus:border-primary"
+                        >
+                            <option value="">-- Pilih Kelas --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="cohort_year" class="block text-[11px] font-medium text-slate-600 mb-1.5">
+                            Tahun Angkatan
+                        </label>
+                        <input 
+                            type="text" 
+                            id="cohort_year" 
+                            name="cohort_year" 
+                            value="{{ old('cohort_year') }}" 
+                            placeholder="Terisi otomatis atau ketik manual" 
+                            class="w-full font-mono text-[13px] px-3.5 py-2.5 bg-white border border-border rounded-md text-text-primary focus:outline-none focus:border-primary"
+                        >
+                    </div>
                 </div>
             </div>
 
@@ -140,7 +186,7 @@
 
             <!-- Submit Buttons -->
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-border">
-                <a href="{{ route('participants.index') }}" class="px-4 py-2.5 border border-border text-text-secondary hover:bg-background rounded-md text-[13px] font-medium transition-colors">
+                <a href="{{ route('admin.participants.index') }}" class="px-4 py-2.5 border border-border text-text-secondary hover:bg-background rounded-md text-[13px] font-medium transition-colors">
                     Batal
                 </a>
                 <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-md text-[13px] font-medium transition-colors shadow-sm">
@@ -152,4 +198,79 @@
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+    const academicStructureData = @json($departments);
+
+    function getDepartmentByName(deptName) {
+        return academicStructureData.find(d => d.name === deptName);
+    }
+
+    function updateProdiOptions(selectedProdi = '') {
+        const deptName = document.getElementById('department').value;
+        const prodiSelect = document.getElementById('study_program');
+        prodiSelect.innerHTML = '<option value="">-- Pilih Program Studi --</option>';
+
+        if (deptName) {
+            const dept = getDepartmentByName(deptName);
+            if (dept && dept.study_programs) {
+                dept.study_programs.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.name;
+                    opt.textContent = p.name + ' (' + p.degree_level + ')';
+                    if (p.name === selectedProdi) opt.selected = true;
+                    prodiSelect.appendChild(opt);
+                });
+            }
+        }
+        updateClassOptions();
+    }
+
+    function updateClassOptions(selectedClass = '') {
+        const deptName = document.getElementById('department').value;
+        const prodiName = document.getElementById('study_program').value;
+        const classSelect = document.getElementById('class_group');
+        classSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+
+        if (deptName && prodiName) {
+            const dept = getDepartmentByName(deptName);
+            const prodi = dept?.study_programs?.find(p => p.name === prodiName);
+            if (prodi && prodi.classes) {
+                prodi.classes.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    opt.dataset.cohort = c.cohort_year;
+                    opt.textContent = c.name + ' - Angkatan ' + c.cohort_year;
+                    if (c.name === selectedClass) opt.selected = true;
+                    classSelect.appendChild(opt);
+                });
+            }
+        }
+    }
+
+    function updateCohortFromClass() {
+        const classSelect = document.getElementById('class_group');
+        const cohortInput = document.getElementById('cohort_year');
+        const selectedOpt = classSelect.options[classSelect.selectedIndex];
+        if (selectedOpt && selectedOpt.dataset.cohort) {
+            cohortInput.value = selectedOpt.dataset.cohort;
+        }
+    }
+
+    // Initialize initial values if old() is present
+    document.addEventListener('DOMContentLoaded', function() {
+        const initialDept = "{{ old('department') }}";
+        const initialProdi = "{{ old('study_program') }}";
+        const initialClass = "{{ old('class_group') }}";
+
+        if (initialDept) {
+            updateProdiOptions(initialProdi);
+            if (initialProdi) {
+                updateClassOptions(initialClass);
+            }
+        }
+    });
+</script>
+@endpush
 @endsection

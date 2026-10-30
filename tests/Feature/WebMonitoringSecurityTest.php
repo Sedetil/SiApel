@@ -82,57 +82,71 @@ class WebMonitoringSecurityTest extends TestCase
     }
 
     /**
-     * Uji 1: Admin dan Timdis dapat mengakses seluruh halaman monitoring
+     * Uji 1: Admin dan Timdis dapat mengakses seluruh halaman monitoring pada prefix masing-masing
      */
     public function test_admin_and_timdis_can_access_monitoring_pages(): void
     {
         // Admin
-        $this->actingAs($this->admin)->get('/dashboard')->assertStatus(200);
-        $this->actingAs($this->admin)->get('/monitoring')->assertStatus(200);
-        $this->actingAs($this->admin)->get('/presensi/riwayat')->assertStatus(200);
-        $this->actingAs($this->admin)->get('/reports')->assertStatus(200);
+        $this->actingAs($this->admin)->get('/admin/dashboard')->assertStatus(200);
+        $this->actingAs($this->admin)->get('/admin/monitoring')->assertStatus(200);
+        $this->actingAs($this->admin)->get('/admin/presensi/riwayat')->assertStatus(200);
+        $this->actingAs($this->admin)->get('/admin/reports')->assertStatus(200);
 
         // Timdis
-        $this->actingAs($this->timdis)->get('/dashboard')->assertStatus(200);
-        $this->actingAs($this->timdis)->get('/monitoring')->assertStatus(200);
-        $this->actingAs($this->timdis)->get('/presensi/riwayat')->assertStatus(200);
-        $this->actingAs($this->timdis)->get('/reports')->assertStatus(200);
+        $this->actingAs($this->timdis)->get('/timdis/dashboard')->assertStatus(200);
+        $this->actingAs($this->timdis)->get('/timdis/monitoring')->assertStatus(200);
+        $this->actingAs($this->timdis)->get('/timdis/presensi/riwayat')->assertStatus(200);
+        $this->actingAs($this->timdis)->get('/timdis/reports')->assertStatus(200);
     }
 
     /**
-     * Uji 2: Timdis ditolak (403 Forbidden) mengakses modul konfigurasi Admin via URL langsung
+     * Uji 2: Otorisasi lintas peran ditolak (Admin dilarang akses rute khusus timdis, dan sebaliknya)
+     */
+    public function test_cross_role_access_is_forbidden(): void
+    {
+        // Timdis mencoba akses dashboard dan monitoring admin -> 403 Forbidden
+        $this->actingAs($this->timdis)->get('/admin/dashboard')->assertStatus(403);
+        $this->actingAs($this->timdis)->get('/admin/monitoring')->assertStatus(403);
+
+        // Admin mencoba akses rute khusus timdis -> 403 Forbidden
+        $this->actingAs($this->admin)->get('/timdis/dashboard')->assertStatus(403);
+        $this->actingAs($this->admin)->get('/timdis/monitoring')->assertStatus(403);
+    }
+
+    /**
+     * Uji 3: Timdis ditolak (403 Forbidden) mengakses modul konfigurasi Admin via URL langsung
      */
     public function test_timdis_cannot_access_admin_management_modules(): void
     {
         // CRUD Master Peserta
-        $this->actingAs($this->timdis)->get('/participants')->assertStatus(403);
-        $this->actingAs($this->timdis)->get('/participants/create')->assertStatus(403);
+        $this->actingAs($this->timdis)->get('/admin/participants')->assertStatus(403);
+        $this->actingAs($this->timdis)->get('/admin/participants/create')->assertStatus(403);
 
         // CRUD Jadwal
-        $this->actingAs($this->timdis)->get('/schedules')->assertStatus(403);
-        $this->actingAs($this->timdis)->get('/schedules/create')->assertStatus(403);
+        $this->actingAs($this->timdis)->get('/admin/schedules')->assertStatus(403);
+        $this->actingAs($this->timdis)->get('/admin/schedules/create')->assertStatus(403);
 
         // Kelola Petugas / Timdis
-        $this->actingAs($this->timdis)->get('/officers')->assertStatus(403);
+        $this->actingAs($this->timdis)->get('/admin/officers')->assertStatus(403);
 
         // Audit Log
-        $this->actingAs($this->timdis)->get('/audit-logs')->assertStatus(403);
+        $this->actingAs($this->timdis)->get('/admin/audit-logs')->assertStatus(403);
     }
 
     /**
-     * Uji 3: Admin dan Timdis dapat melihat profil detail peserta dalam mode baca
+     * Uji 4: Admin dan Timdis dapat melihat profil detail peserta dalam mode baca pada prefix masing-masing
      */
     public function test_admin_and_timdis_can_view_participant_detail_read_only(): void
     {
         // Admin dapat melihat
-        $resAdmin = $this->actingAs($this->admin)->get("/participants/{$this->participant->id}");
+        $resAdmin = $this->actingAs($this->admin)->get("/admin/participants/{$this->participant->id}");
         $resAdmin->assertStatus(200)
             ->assertSee($this->participant->name)
             ->assertSee($this->participant->identifier)
             ->assertSee('Detail Peserta (Mode Baca)');
 
         // Timdis dapat melihat
-        $resTimdis = $this->actingAs($this->timdis)->get("/participants/{$this->participant->id}");
+        $resTimdis = $this->actingAs($this->timdis)->get("/timdis/participants/{$this->participant->id}");
         $resTimdis->assertStatus(200)
             ->assertSee($this->participant->name)
             ->assertSee($this->participant->identifier)
@@ -140,43 +154,54 @@ class WebMonitoringSecurityTest extends TestCase
     }
 
     /**
-     * Uji 4: Timdis ditolak saat mencoba memutasi data peserta
+     * Uji 5: Timdis ditolak saat mencoba memutasi data peserta
      */
     public function test_timdis_cannot_mutate_participant_data(): void
     {
         // Coba edit form
-        $this->actingAs($this->timdis)->get("/participants/{$this->participant->id}/edit")->assertStatus(403);
+        $this->actingAs($this->timdis)->get("/admin/participants/{$this->participant->id}/edit")->assertStatus(403);
 
         // Coba submit update
-        $this->actingAs($this->timdis)->put("/participants/{$this->participant->id}", [
+        $this->actingAs($this->timdis)->put("/admin/participants/{$this->participant->id}", [
             'name' => 'Nama Diubah',
             'identifier' => 'NPM_SEC_8801',
             'is_active' => 1,
         ])->assertStatus(403);
 
         // Coba petakan RFID
-        $this->actingAs($this->timdis)->post("/participants/{$this->participant->id}/map-rfid", [
+        $this->actingAs($this->timdis)->post("/admin/participants/{$this->participant->id}/map-rfid", [
             'card_uid' => 'UID_HACK_999',
         ])->assertStatus(403);
 
         // Coba toggle status
-        $this->actingAs($this->timdis)->post("/participants/{$this->participant->id}/toggle-status")->assertStatus(403);
+        $this->actingAs($this->timdis)->post("/admin/participants/{$this->participant->id}/toggle-status")->assertStatus(403);
     }
 
     /**
-     * Uji 5: Pengguna tanpa login dialihkan ke halaman login
+     * Uji 6: Pengguna tanpa login dialihkan ke halaman login
      */
     public function test_unauthenticated_users_redirected_to_login(): void
     {
-        $this->get('/dashboard')->assertRedirect('/login');
-        $this->get('/monitoring')->assertRedirect('/login');
-        $this->get('/presensi/riwayat')->assertRedirect('/login');
-        $this->get('/reports')->assertRedirect('/login');
-        $this->get("/participants/{$this->participant->id}")->assertRedirect('/login');
+        $this->get('/admin/dashboard')->assertRedirect('/login');
+        $this->get('/admin/monitoring')->assertRedirect('/login');
+        $this->get('/timdis/dashboard')->assertRedirect('/login');
+        $this->get('/timdis/monitoring')->assertRedirect('/login');
+        $this->get("/admin/participants/{$this->participant->id}")->assertRedirect('/login');
+        $this->get("/timdis/participants/{$this->participant->id}")->assertRedirect('/login');
     }
 
     /**
-     * Uji 6: Web tidak lagi memiliki endpoint mutasi presensi langsung (Strictly Read-Only Web)
+     * Uji 7: Akses root / mengalihkan sesuai role
+     */
+    public function test_authenticated_user_accessing_root_redirects_to_role_dashboard(): void
+    {
+        $this->get('/')->assertRedirect('/login');
+        $this->actingAs($this->admin)->get('/')->assertRedirect('/admin/dashboard');
+        $this->actingAs($this->timdis)->get('/')->assertRedirect('/timdis/dashboard');
+    }
+
+    /**
+     * Uji 8: Web tidak lagi memiliki endpoint mutasi presensi langsung (Strictly Read-Only Web)
      */
     public function test_web_cannot_mutate_attendance_records(): void
     {
@@ -191,11 +216,11 @@ class WebMonitoringSecurityTest extends TestCase
     }
 
     /**
-     * Uji 7: Endpoint polling live feed monitoring bersifat read-only dan mengembalikan format JSON yang valid
+     * Uji 9: Endpoint polling live feed monitoring bersifat read-only dan mengembalikan format JSON yang valid
      */
     public function test_live_feed_endpoint_returns_json_and_is_read_only(): void
     {
-        $response = $this->actingAs($this->timdis)->getJson("/monitoring/feed?schedule_id={$this->schedule->id}");
+        $response = $this->actingAs($this->timdis)->getJson("/timdis/monitoring/feed?schedule_id={$this->schedule->id}");
 
         $response->assertStatus(200)
             ->assertJson([
@@ -209,20 +234,20 @@ class WebMonitoringSecurityTest extends TestCase
     }
 
     /**
-     * Uji 8: Filter dan pencarian pada riwayat presensi berfungsi normal
+     * Uji 10: Filter dan pencarian pada riwayat presensi berfungsi normal
      */
     public function test_filter_and_search_in_attendance_history(): void
     {
         // Cari berdasarkan nama
-        $resName = $this->actingAs($this->timdis)->get('/presensi/riwayat?search=Mahasiswa+Uji');
+        $resName = $this->actingAs($this->timdis)->get('/timdis/presensi/riwayat?search=Mahasiswa+Uji');
         $resName->assertStatus(200)->assertSee('Mahasiswa Uji Monitoring');
 
-        // Cari berdasarkan status
-        $resStatus = $this->actingAs($this->timdis)->get('/presensi/riwayat?status=hadir');
+        // Cari berdasarkan status (sertakan search agar record pengujian masuk dalam page)
+        $resStatus = $this->actingAs($this->timdis)->get('/timdis/presensi/riwayat?status=hadir&search=Mahasiswa+Uji');
         $resStatus->assertStatus(200)->assertSee('Mahasiswa Uji Monitoring');
 
-        // Cari dengan status yang tidak ada
-        $resNone = $this->actingAs($this->timdis)->get('/presensi/riwayat?status=terlambat');
+        // Cari dengan kriteria yang tidak ada
+        $resNone = $this->actingAs($this->timdis)->get('/timdis/presensi/riwayat?search=NON_EXISTENT_PARTICIPANT_XYZ999');
         $resNone->assertStatus(200)->assertSee('Tidak Ada Data Presensi');
     }
 }

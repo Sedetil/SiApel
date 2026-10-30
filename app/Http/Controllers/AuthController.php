@@ -15,7 +15,9 @@ class AuthController extends Controller
     public function showLogin(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            return Auth::user()->isAdmin()
+                ? redirect()->route('admin.dashboard')
+                : redirect()->route('timdis.dashboard');
         }
 
         return view('pages.auth.login');
@@ -63,7 +65,9 @@ class AuthController extends Controller
             userId: $user->id
         );
 
-        return redirect()->intended(route('dashboard'))->with('status', "Selamat datang kembali, {$user->name}.");
+        $targetRoute = $user->isAdmin() ? route('admin.dashboard') : route('timdis.dashboard');
+
+        return redirect()->intended($targetRoute)->with('status', "Selamat datang kembali, {$user->name}.");
     }
 
     public function logout(Request $request): RedirectResponse

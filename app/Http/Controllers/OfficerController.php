@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,17 +19,26 @@ class OfficerController extends Controller
             ->orderBy('name', 'asc')
             ->paginate(15);
 
-        return view('pages.officers.index', compact('officers'));
+        $departments = Department::with(['studyPrograms.classes'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('pages.officers.index', compact('officers', 'departments'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'username' => 'required|string|max:100|unique:users,username',
-            'email' => 'required|email|max:255|unique:users,email',
+            'username' => 'required|string|max:100|unique:pengguna,username',
+            'email' => 'required|email|max:255|unique:pengguna,email',
             'password' => 'required|string|min:6',
+            'department' => 'nullable|string|max:150',
             'study_program' => 'nullable|string|max:150',
+            'class_group' => 'nullable',
+            'class_groups' => 'nullable|array',
+            'cohort_year' => 'nullable|string|max:100',
             'role' => 'nullable|string|in:timdis,petugas',
         ], [
             'username.unique' => 'Username ini sudah digunakan.',
@@ -38,11 +48,23 @@ class OfficerController extends Controller
 
         $role = $validated['role'] ?? 'timdis';
 
+        $classGroupFinal = null;
+        if (! empty($validated['class_groups']) && is_array($validated['class_groups'])) {
+            $classGroupFinal = implode(', ', array_unique(array_filter(array_map('trim', $validated['class_groups']))));
+        } elseif (! empty($validated['class_group'])) {
+            $classGroupFinal = is_array($validated['class_group'])
+                ? implode(', ', array_unique(array_filter(array_map('trim', $validated['class_group']))))
+                : trim($validated['class_group']);
+        }
+
         $officer = User::create([
             'name' => $validated['name'],
             'username' => trim($validated['username']),
             'email' => trim($validated['email']),
+            'department' => $validated['department'] ?? null,
             'study_program' => $validated['study_program'] ?? null,
+            'class_group' => $classGroupFinal,
+            'cohort_year' => $validated['cohort_year'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => $role,
             'is_active' => true,
@@ -55,24 +77,40 @@ class OfficerController extends Controller
             entityId: $officer->id
         );
 
-        return redirect()->route('officers.index')->with('status', "Akun {$role} {$officer->name} berhasil dibuat.");
+        return redirect()->route('admin.officers.index')->with('status', "Akun {$role} {$officer->name} berhasil dibuat.");
     }
 
     public function update(Request $request, User $officer): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'username' => ['required', 'string', 'max:100', Rule::unique('users', 'username')->ignore($officer->id)],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($officer->id)],
+            'username' => ['required', 'string', 'max:100', Rule::unique($officer->getTable(), 'username')->ignore($officer->getKey(), $officer->getKeyName())],
+            'email' => ['required', 'email', 'max:255', Rule::unique($officer->getTable(), 'email')->ignore($officer->getKey(), $officer->getKeyName())],
+            'department' => 'nullable|string|max:150',
             'study_program' => 'nullable|string|max:150',
+            'class_group' => 'nullable',
+            'class_groups' => 'nullable|array',
+            'cohort_year' => 'nullable|string|max:100',
             'password' => 'nullable|string|min:6',
         ]);
+
+        $classGroupFinal = null;
+        if (! empty($validated['class_groups']) && is_array($validated['class_groups'])) {
+            $classGroupFinal = implode(', ', array_unique(array_filter(array_map('trim', $validated['class_groups']))));
+        } elseif (! empty($validated['class_group'])) {
+            $classGroupFinal = is_array($validated['class_group'])
+                ? implode(', ', array_unique(array_filter(array_map('trim', $validated['class_group']))))
+                : trim($validated['class_group']);
+        }
 
         $updateData = [
             'name' => $validated['name'],
             'username' => trim($validated['username']),
             'email' => trim($validated['email']),
+            'department' => $validated['department'] ?? null,
             'study_program' => $validated['study_program'] ?? null,
+            'class_group' => $classGroupFinal,
+            'cohort_year' => $validated['cohort_year'] ?? null,
         ];
 
         if (! empty($validated['password'])) {
@@ -88,7 +126,7 @@ class OfficerController extends Controller
             entityId: $officer->id
         );
 
-        return redirect()->route('officers.index')->with('status', "Data akun timdis {$officer->name} berhasil diperbarui.");
+        return redirect()->route('admin.officers.index')->with('status', "Data akun timdis {$officer->name} berhasil diperbarui.");
     }
 
     public function toggleStatus(User $officer): RedirectResponse
@@ -122,6 +160,6 @@ class OfficerController extends Controller
             entityId: $id
         );
 
-        return redirect()->route('officers.index')->with('status', "Akun timdis {$name} berhasil dihapus.");
+        return redirect()->route('admin.officers.index')->with('status', "Akun timdis {$name} berhasil dihapus.");
     }
 }
